@@ -8,6 +8,7 @@ import PIL.ImageTk
 BPP = 32
 
 
+# https://softwareengineering.stackexchange.com/a/212813
 def map_2d_coord_to_1d_index(two_dim_plane_width: int, x: int, y: int) -> int:
     return x + two_dim_plane_width * y
 
