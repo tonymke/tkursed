@@ -4,6 +4,10 @@ version = "0.0.1"
 description = "A completely cursed 2D renderer done entirely with the Tcl/Tk image object."
 authors = ["Tony Lechner <tony@tony-lechner.com>"]
 license = "MIT"
+packages = [
+    { include = "tkursed.py" }
+]
+exclude = ["examples/"]
 
 [tool.poetry.dependencies]
 python = "^3.10"
