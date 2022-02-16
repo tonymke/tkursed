@@ -26,10 +26,10 @@ class Sprite:
     def __init__(
         self,
         image: Union[bytes, bytearray],
+        width: int,
+        height: int,
         position_x: int = 0,
         position_y: int = 0,
-        width: int = 1,
-        height: int = 1,
     ):
         if position_x < 0 or position_y < 0 or width < 1 or height < 1:
             raise ValueError("position/width out of bounds")
