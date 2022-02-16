@@ -1,7 +1,7 @@
 import sys
 import tkinter
 from tkinter import ttk
-from typing import Callable, Union
+from typing import Callable, Optional, Union
 
 import PIL.Image
 import PIL.ImageTk
@@ -60,7 +60,9 @@ class TkursedRenderer:
     _height: int
     _running: bool
     _title: str
-    _user_loop_callback: Callable[[Callable[[], None]], None]
+    _user_loop_callback = (
+        None
+    )  # type: Callable[[TkursedRenderer, Callable[[], None]], None]
     _width: int
 
     _sprites: list[Sprite]
@@ -95,8 +97,10 @@ class TkursedRenderer:
 
     def __init__(
         self,
-        loop_callback: Callable[[Callable[[], None]], None],
-        sprites: list[Sprite] = None,
+        loop_callback=(
+            None
+        ),  # type: Callable[[TkursedRenderer, Callable[[], None]], None]
+        sprites: Optional[list[Sprite]] = None,
         width: int = 800,
         height: int = 600,
         title: str = "A tcl/tk-ursed 2D Renderer",
@@ -169,7 +173,7 @@ class TkursedRenderer:
             return
 
         try:
-            self._user_loop_callback(self._draw)  # type: ignore
+            self._user_loop_callback(self, self._draw)  # type: ignore
             self._tk_root.after(3, self._main_loop)
         except Exception:
             self._running = False
@@ -194,7 +198,7 @@ class TkursedRenderer:
 
 
 def main() -> int:
-    TkursedRenderer(lambda draw_fn: draw_fn()).run()
+    TkursedRenderer(lambda renderer, draw_fn: draw_fn()).run()
     return 0
 
 
