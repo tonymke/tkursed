@@ -1,5 +1,6 @@
 *$py.class
 *.egg-info/
 *.py[cod]
+.mypy_cache/
 .venv*/
 __pycache__/

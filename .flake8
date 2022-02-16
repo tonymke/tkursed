@@ -1,0 +1,5 @@
+# flake8 does not support PEP-518 (putting its config in pyproject.toml)
+# Feature request tracked at https://github.com/PyCQA/flake8/issues/234
+[flake8]
+max-line-length = 88
+extend-ignore = E203

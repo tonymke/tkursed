@@ -1,8 +1,7 @@
 import sys
-from typing import Callable, Union
-
 import tkinter
 from tkinter import ttk
+from typing import Callable, Union
 
 import PIL.Image
 import PIL.ImageTk
@@ -56,7 +55,7 @@ class TkursedRenderer:
     _image_widget: PIL.ImageTk.PhotoImage
     _image_label: ttk.Label
 
-    _bg_color = bytes
+    _bg_color: bytes
     _frame_buffer: bytearray
     _height: int
     _running: bool
@@ -115,7 +114,7 @@ class TkursedRenderer:
         self._width = width
         self._height = height
         self._running = False
-        self._user_loop_callback = loop_callback
+        self._user_loop_callback = loop_callback  # type: ignore
         self._bg_color = bg_color
         self._frame_buffer = bytearray(self.bg_color * self.width * self.height)
         self._sprites = [] if not sprites else sprites
@@ -126,11 +125,11 @@ class TkursedRenderer:
         self._tk_root.rowconfigure(0, weight=1)
         self._tk_root.resizable(False, False)
 
-        self._tk_frame = tkinter.Frame(
+        self._tk_frame = ttk.Frame(
             self._tk_root, width=self._width, height=self._height
         )
         self._tk_frame.grid(
-            column=0, row=0, sticky=(tkinter.N, tkinter.W, tkinter.E, tkinter.S)
+            column=0, row=0, sticky=tkinter.N + tkinter.W + tkinter.E + tkinter.S
         )
         self._tk_frame.pack()
 
@@ -159,7 +158,7 @@ class TkursedRenderer:
         if sprite.position_x > self.width or sprite.position_y > self.height:
             return
 
-        raise NotImplemented
+        raise NotImplementedError
 
     def _main_loop(self) -> None:
         if not self._running:
@@ -170,7 +169,7 @@ class TkursedRenderer:
             return
 
         try:
-            self._user_loop_callback(self._draw)
+            self._user_loop_callback(self._draw)  # type: ignore
             self._tk_root.after(3, self._main_loop)
         except Exception:
             self._running = False
@@ -194,8 +193,9 @@ class TkursedRenderer:
             self._running = False
 
 
-def main() -> Union[None, int]:
-    return TkursedRenderer(lambda draw_fn: draw_fn()).run()
+def main() -> int:
+    TkursedRenderer(lambda draw_fn: draw_fn()).run()
+    return 0
 
 
 if __name__ == "__main__":
