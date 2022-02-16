@@ -1,6 +1,16 @@
 # Tkursed
 
-A completely cursed 2D renderer done entirely with the Tcl/Tk image widget.
+A completely cursed 2D renderer done entirely with the Tcl/Tk image object.
+
+I wanted the experience of optimizing a CPU-bound software renderer on a system
+that wasn't meant for it at all - just like our DOS granddevs once did.
+
+## Progress
+
+- [x] Rudimentary framework and loop
+- [x] Drawing frame buffer
+- [ ] Drawing Sprites
+- [ ] Expose keyboard/mouse IO
 
 ## License
 
