@@ -152,17 +152,48 @@ class TkursedRenderer:
 
     def _draw(self) -> None:
         self._frame_buffer[:] = self._bg_color * self.width * self.height
-        # TODO draw sprites into buffer
+
+        for sprite in self._sprites:
+            self._draw_sprite(sprite)
 
         # There is no direct access to the image widget's underlying buffer. Enjoy.
         self._image_widget.paste(self._image)
 
     def _draw_sprite(self, sprite: Sprite) -> None:
         # skip if not on plane at all
-        if sprite.position_x > self.width or sprite.position_y > self.height:
+        if sprite.position_x >= self.width or sprite.position_y >= self.height:
             return
 
-        raise NotImplementedError
+        if sprite.position_x + self.width < 0 or sprite.position_y + sprite.height < 0:
+            return
+
+        # calc the sprite's visible window - an origin, width, and height
+        sprite_window_x = 0 if sprite.position_x >= 0 else abs(sprite.position_x)
+        sprite_window_y = 0 if sprite.position_y >= 0 else abs(sprite.position_y)
+        sprite_window_width = min(sprite.width, self.width - sprite.position_x)
+        sprite_window_height = min(sprite.height, self.height - sprite.position_y)
+
+        # calc the sprite window's origin on the canvas
+        canvas_window_x = sprite.position_x + sprite_window_x
+        canvas_window_y = sprite.position_y + sprite_window_y
+
+        # translate the sprite window coords to buffer indices
+        sprite_i = map_2d_coord_to_1d_index(
+            sprite_window_width, sprite_window_x, sprite_window_y
+        ) * (BPP // 8)
+        canvas_i = map_2d_coord_to_1d_index(
+            self.width, canvas_window_x, canvas_window_y
+        ) * (BPP // 8)
+
+        # write window-width of data for 0..height cols
+        for row in range(0, sprite_window_height):
+            if row > 0:
+                sprite_i += sprite.width * (BPP // 8)
+                canvas_i += self.width * (BPP // 8)
+
+            self._frame_buffer[
+                canvas_i : canvas_i + sprite_window_width * (BPP // 8)
+            ] = sprite.image[sprite_i : sprite_i + sprite_window_width * (BPP // 8)]
 
     def _main_loop(self) -> None:
         if not self._running:

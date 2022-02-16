@@ -9,7 +9,7 @@ that wasn't meant for it at all - just like our DOS granddevs once did.
 
 - [x] Rudimentary framework and loop
 - [x] Drawing frame buffer
-- [ ] Drawing Sprites
+- [x] Drawing Sprites
 - [ ] Expose keyboard/mouse IO
 
 ## License
