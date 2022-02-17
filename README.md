@@ -12,6 +12,7 @@ that wasn't meant for it at all - just like our DOS granddevs once did.
 - [x] Rudimentary framework and loop
 - [x] Drawing frame buffer
 - [x] Drawing Sprites
+- [ ] Fix bug in sprite cropping logic
 
 ## License
 
