@@ -126,7 +126,7 @@ def main() -> int:
                 1000 // 60,
                 cycle(
                     (x, periodic_fn(x))
-                    for x in float_range(0.0, canvas_width - sprite_width)
+                    for x in float_range(-sprite.width, canvas_width+sprite_width)
                 ),
             )
         )

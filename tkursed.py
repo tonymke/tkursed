@@ -1,11 +1,33 @@
 import tkinter
 from tkinter import ttk
-from typing import Callable, Optional, Union
+from typing import Callable, Optional, Tuple, Union
 
 import PIL.Image
 import PIL.ImageTk
 
 BPP = 32
+
+
+def crop_visible_plane(
+    sprite_coord: int, sprite_len: int, canvas_len: int
+) -> Tuple[int, int, int]:
+    sprite_window_coord: int = 0
+    sprite_window_len: int = sprite_len
+    canvas_coord: int = sprite_coord
+
+    # partially left/above canvas
+    if sprite_coord < 0:
+        sprite_window_len = sprite_len - abs(sprite_coord)
+        sprite_window_coord = sprite_len - sprite_window_len
+        canvas_coord = 0
+    # partially right/below canvas
+    elif sprite_coord + sprite_len >= canvas_len:
+        sprite_window_coord = 0
+        sprite_window_len = canvas_len - sprite_coord
+        canvas_coord = sprite_coord
+
+    # fully in frame
+    return (sprite_window_coord, sprite_window_len, canvas_coord)
 
 
 # https://softwareengineering.stackexchange.com/a/212813
@@ -157,21 +179,21 @@ class TkursedRenderer:
 
     def _draw_sprite(self, sprite: Sprite) -> None:
         # skip if not on plane at all
-        if sprite.position_x >= self.width or sprite.position_y >= self.height:
+        if sprite.position_x + sprite.width <= 0 or sprite.position_x >= self.width:
             return
 
-        if sprite.position_x + self.width < 0 or sprite.position_y + sprite.height < 0:
+        if sprite.position_y + sprite.height <= 0 or sprite.position_y >= self.height:
             return
 
         # calc the sprite's visible window - an origin, width, and height
-        sprite_window_x = 0 if sprite.position_x >= 0 else abs(sprite.position_x)
-        sprite_window_y = 0 if sprite.position_y >= 0 else abs(sprite.position_y)
-        sprite_window_width = min(sprite.width, self.width - sprite.position_x)
-        sprite_window_height = min(sprite.height, self.height - sprite.position_y)
-
-        # calc the sprite window's origin on the canvas
-        canvas_window_x = sprite.position_x + sprite_window_x
-        canvas_window_y = sprite.position_y + sprite_window_y
+        sprite_window_x, sprite_window_width, canvas_window_x = crop_visible_plane(
+            sprite.position_x, sprite.width, self.width
+        )
+        sprite_window_y, sprite_window_height, canvas_window_y = crop_visible_plane(
+            sprite.position_y,
+            sprite.height,
+            self.height,
+        )
 
         # translate the sprite window coords to buffer indices
         sprite_i = map_2d_coord_to_1d_index(
