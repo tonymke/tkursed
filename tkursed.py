@@ -13,10 +13,6 @@ def map_2d_coord_to_1d_index(two_dim_plane_width: int, x: int, y: int) -> int:
     return x + two_dim_plane_width * y
 
 
-def map_1d_index_to_2d_coord(two_dim_plane_width: int, i: int) -> tuple[int, int]:
-    return int(i % two_dim_plane_width), i // two_dim_plane_width
-
-
 class Sprite:
     position_x: int
     position_y: int
