@@ -11,7 +11,7 @@ that wasn't meant for it at all - just like our DOS granddevs once did.
 
 1. Have a Python interpreter installed that supports at least Python 3.10,
     e.g. [CPython](https://www.python.org/downloads/).
-2. Install [Poetry](https://github.com/python-poetry/poetry)>
+2. Install [Poetry](https://github.com/python-poetry/poetry)
 3. Clone and cd to checkout directory.
     1. `git clone https://github.com/tonymke/tkursed.git`
     2. `cd tkursed`
