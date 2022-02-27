@@ -1,11 +1,8 @@
 import sys
 
-from tkursed import TkursedRenderer
-
 
 def main() -> int:
-    TkursedRenderer(lambda renderer, draw_fn: draw_fn()).run()
-    return 0
+    raise NotImplementedError
 
 
 if __name__ == "__main__":
