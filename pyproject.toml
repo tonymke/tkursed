@@ -7,7 +7,7 @@ license = "MIT"
 packages = [
     { include = "tkursed.py" }
 ]
-exclude = ["examples/"]
+exclude = ["examples/", "test_tkursed.py"]
 
 [tool.poetry.dependencies]
 python = "^3.10"
@@ -26,4 +26,3 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.isort]
 profile = "black"
-
