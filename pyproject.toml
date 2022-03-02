@@ -5,9 +5,10 @@ description = "A completely cursed 2D renderer done entirely with the Tcl/Tk ima
 authors = ["Tony Lechner <tony@tony-lechner.com>"]
 license = "MIT"
 packages = [
-    { include = "tkursed.py" }
+    { include = "tkursed", from = "src" },
+    { include = "tkursed/py.typed", from = "src" },
 ]
-exclude = ["examples/", "test_tkursed.py"]
+exclude = ["examples/", "tests/"]
 
 [tool.poetry.dependencies]
 python = "^3.10"
