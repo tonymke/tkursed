@@ -1,3 +1,4 @@
+import copy
 import tkinter
 import tkinter.ttk
 from typing import TypeVar, cast
@@ -44,7 +45,7 @@ class Tkursed(tkinter.ttk.Frame):
 
     def __logic_loop(self) -> None:
         self.__logic_tick += 1
-        new_renderer_state = self.__reducer(self.__logic_tick, self.__state)
-        if new_renderer_state is not self.__state:
+        new_renderer_state = self.__reducer(self.__logic_tick, copy.copy(self.__state))
+        if new_renderer_state and new_renderer_state is not self.__state:
             self.__renderer.render(new_renderer_state)
         self.after(self.__logic_tick_rate_ms, self.__logic_loop)

@@ -15,13 +15,14 @@ def create_reducer():
     )
     last = 0
 
-    def reducer(tick: int, state: tkursed.State) -> tkursed.State:
+    def reducer(tick: int, state: tkursed.State) -> tkursed.State | None:
         nonlocal color_cycle, last
         if tick - last > 16 or tick == 1:
             last = tick
-            return tkursed.State(pixel=next(color_cycle))
+            state.pixel = next(color_cycle)
+            return state
 
-        return state
+        return None
 
     return reducer
 

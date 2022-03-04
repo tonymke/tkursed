@@ -11,4 +11,4 @@ class State:
     pixel: tuple[int, int, int] = (0, 0, 0)
 
 
-Reducer = Callable[[int, State], State]
+Reducer = Callable[[int, State], State | None]
