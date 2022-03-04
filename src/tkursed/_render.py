@@ -6,7 +6,7 @@ from tkursed import _consts, _state
 
 class Image(PIL.ImageTk.PhotoImage):
     @property
-    def frame_buffer(self) -> bytearray:
+    def _frame_buffer(self) -> bytearray:
         return self.__frame_buffer
 
     def __init__(self, width: int, height: int):
@@ -44,7 +44,7 @@ class Renderer:
         if len(state.pixel) + 1 != _consts.BPP // 8:
             raise RuntimeError("bad renderer state")
 
-        self.__image.frame_buffer[:] = (
+        self.__image._frame_buffer[:] = (
             bytes(
                 (
                     *state.pixel,
