@@ -40,7 +40,6 @@ class Tkursed(tkinter.ttk.Frame):
         self.__image_label.pack()
 
         # start runtime loops
-        # TODO add event hook for when we're actually rendered
         self.after_idle(self.__logic_loop)
 
     def __logic_loop(self) -> None:
