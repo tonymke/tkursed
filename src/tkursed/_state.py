@@ -22,6 +22,7 @@ The actual type here is
 Mypy does not yet support recursive types, unfortunately.
 """
 
+
 T_BaseState = TypeVar("T_BaseState", bound="_BaseState")
 
 
@@ -92,6 +93,19 @@ class Dimensions(_BaseState):
 
 TImage = TypeVar("TImage", bound="Image")
 _IMAGE_DEFAULT_NAME = "(untitled)"
+
+RGBPixel = tuple[int, int, int]
+
+
+def validate_RGBPixel(value: RGBPixel):
+    errors: ValidationErrors = {}
+    for i, pixel in enumerate(value):
+        if not 0 <= pixel <= 255:
+            errors[str(i)] = ValueError(
+                "RGBPixel byte out of range 0<=X<=255", ("index", i), ("value", pixel)
+            )
+
+    return errors
 
 
 class Image(_BaseState):
@@ -227,7 +241,7 @@ class State(_BaseState):
         default_factory=lambda: Dimensions(800, 600)
     )
 
-    pixel: tuple[int, int, int] = (0, 0, 0)
+    pixel: RGBPixel = (0, 0, 0)
 
     def validate(self) -> ValidationErrors:
         errors: ValidationErrors = {}
@@ -235,10 +249,8 @@ class State(_BaseState):
         if child_errors := self.canvas_dimensions.validate():
             errors["canvas_dimensions"] = child_errors
 
-        if any((v for v in self.pixel if not 0 <= v <= 255)):
-            errors["pixel"] = ValueError(
-                "pixel byte out of range 0<=value<=255", self.pixel
-            )
+        if child_errors := validate_RGBPixel(self.pixel):
+            errors["pixel"] = child_errors
 
         return errors
 
