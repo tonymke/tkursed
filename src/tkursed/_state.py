@@ -273,4 +273,4 @@ class State(_BaseState):
         return errors
 
 
-Reducer = Callable[[int, State], State | None]
+TickCallback = Callable[[int, State], State | None]

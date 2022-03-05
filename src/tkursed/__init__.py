@@ -5,7 +5,7 @@ from tkursed._state import (  # noqa: F401
     FileOrPath,
     Image,
     PositionedSprite,
-    Reducer,
+    TickCallback,
     RGBPixel,
     Sprite,
     State,

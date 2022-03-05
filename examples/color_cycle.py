@@ -5,7 +5,7 @@ import tkinter
 import tkursed
 
 
-def create_reducer():
+def create_tick_callback():
     color_cycle = itertools.cycle(
         [
             (255, 0, 0),
@@ -15,7 +15,7 @@ def create_reducer():
     )
     last = 0
 
-    def reducer(tick: int, state: tkursed.State) -> tkursed.State | None:
+    def tick_callback(tick: int, state: tkursed.State) -> tkursed.State | None:
         nonlocal color_cycle, last
         if tick - last > 16 or tick == 1:
             last = tick
@@ -24,7 +24,7 @@ def create_reducer():
 
         return None
 
-    return reducer
+    return tick_callback
 
 
 class ExampleWindow(tkinter.Tk):
@@ -33,7 +33,7 @@ class ExampleWindow(tkinter.Tk):
         self.title("A tcl/tkursed 2D renderer")
         self.resizable(False, False)
 
-        self.tkursed = tkursed.Tkursed(self, reducer=create_reducer())
+        self.tkursed = tkursed.Tkursed(self, reducer=create_tick_callback())
         self.tkursed.pack(fill=tkinter.NONE, expand=False, anchor=tkinter.CENTER)
 
 

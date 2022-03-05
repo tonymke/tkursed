@@ -4,14 +4,14 @@ import tkinter.ttk
 from typing import cast
 
 from tkursed import _render
-from tkursed._state import Dimensions, Reducer, State
+from tkursed._state import Dimensions, TickCallback, State
 
 
 class Tkursed(tkinter.ttk.Frame):
     def __init__(
         self,
         *args,
-        reducer: Reducer,
+        reducer: TickCallback,
         width: int = 800,
         height: int = 600,
         tick_rate_ms: int = 1000 // 60,
