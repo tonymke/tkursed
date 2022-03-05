@@ -99,10 +99,6 @@ class Image(_TkursedState):
     def dimensions(self) -> Dimensions:
         return copy.copy(self.__dimensions)
 
-    @property
-    def rgba_pixel_data(self) -> bytes:
-        return memoryview(self.__rgba_pixel_data)
-
     def __init__(
         self,
         image: PIL.Image.Image | FileOrPath,
@@ -119,6 +115,9 @@ class Image(_TkursedState):
         self.__dimensions = Dimensions(concrete_image.width, concrete_image.height)
         self.name = name
         super().__init__()
+
+    def __bytes__(self) -> bytes:
+        return memoryview(self.__rgba_pixel_data)
 
     def __str__(self) -> str:
         return f"<image: {self.name} {self.dimensions}>"
