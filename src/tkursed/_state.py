@@ -2,7 +2,7 @@ import abc
 import copy
 import dataclasses
 import pathlib
-from typing import Any, BinaryIO, Callable, TypeVar
+from typing import Any, BinaryIO, Callable, TypeVar, Union
 
 import PIL.Image
 
@@ -21,6 +21,8 @@ The actual type here is
 
 Mypy does not yet support recursive types, unfortunately.
 """
+
+T_BaseState = TypeVar("T_BaseState", bound="_BaseState")
 
 
 class _BaseState(abc.ABC):
@@ -126,6 +128,97 @@ class Image(_BaseState):
     def validate(self) -> ValidationErrors:
         # construction, readonly-ness ensures valid data
         return {}
+
+
+_SPRITE_DEFAULT_NAME = "(untitled)"
+
+
+class Sprite(_BaseState):
+    __slots__ = ("activte_key", "images", "name")
+
+    @property
+    def active(self) -> Image:
+        try:
+            return self.images[self.active_key]
+        except KeyError as ex:
+            raise RuntimeError(
+                "active_key not in images dict",
+                ("active_key", self.active_key),
+                ("images", self.images),
+            ) from ex
+
+    @active.setter
+    def active(self, value: Image) -> None:
+        new_active_key: str | None = next(
+            (k for k, v in self.images.items() if v == value), None
+        )
+        if not new_active_key:
+            raise ValueError(
+                "value not in images dict' values",
+                ("value", value),
+                ("images", self.images),
+            )
+
+        self.active_key = new_active_key
+
+    def __init__(
+        self,
+        images: Union[Image, dict[str, Image]],
+        active_key: str = "",
+        name: str = _SPRITE_DEFAULT_NAME,
+    ) -> None:
+        self.images: dict[str, Image]
+
+        self.name = name
+        if isinstance(images, Image):
+            self.active_key = ""
+            self.images = {"": images}
+        else:
+            self.active_key = active_key
+            self.images = images
+
+    def __str__(self) -> str:
+        return f"<sprite {self.name}>"
+
+    def validate(self) -> ValidationErrors:
+        errors: ValidationErrors = {}
+        if len(self.images) == 0:
+            errors["images"] = ValueError("empty images dict")
+        if self.active_key not in self.images:
+            errors["active_key"] = ValueError("active_key not in images dict keys")
+
+        if any(child_errors := {k: v.validate() for k, v in self.images.items()}):
+            errors["images"] = child_errors
+
+        return errors
+
+
+class PositionedSprite(Sprite):
+    coordinates: Coordinates
+
+    def __init__(
+        self,
+        coordinates: Coordinates,
+        images: Union[Image, dict[str, Image], Sprite],
+        active_key: str = "",
+        name: str = _SPRITE_DEFAULT_NAME,
+    ) -> None:
+        self.coordinates = coordinates
+
+        if isinstance(images, Sprite):
+            super().__init__(copy.copy(images.images), images.active_key, images.name)
+        else:
+            super().__init__(images, active_key, name)
+
+    def __str__(self) -> str:
+        return f"<sprite {self.name}@{self.coordinates}>"
+
+    def validate(self) -> ValidationErrors:
+        errors = super().validate()
+        if child_error := self.coordinates.validate():
+            errors["coordinates"] = child_error
+
+        return errors
 
 
 @dataclasses.dataclass(slots=True)
