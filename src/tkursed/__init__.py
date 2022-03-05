@@ -1,12 +1,10 @@
 import copy
 import tkinter
 import tkinter.ttk
-from typing import TypeVar, cast
+from typing import cast
 
 from tkursed import _render
 from tkursed._state import Dimensions, Reducer, State
-
-T = TypeVar("T")
 
 
 class Tkursed(tkinter.ttk.Frame):
