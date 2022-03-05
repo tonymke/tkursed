@@ -23,7 +23,7 @@ Mypy does not yet support recursive types, unfortunately.
 """
 
 
-class _TkursedState(abc.ABC):
+class _BaseState(abc.ABC):
     def __post_init__(self):
         errors = self.validate()
         if errors:
@@ -48,7 +48,7 @@ class _TkursedState(abc.ABC):
 
 
 @dataclasses.dataclass(slots=True)
-class Coordinates(_TkursedState):
+class Coordinates(_BaseState):
     x: int
     y: int
 
@@ -60,7 +60,7 @@ class Coordinates(_TkursedState):
 
 
 @dataclasses.dataclass(slots=True)
-class Dimensions(_TkursedState):
+class Dimensions(_BaseState):
     width: int
     height: int
 
@@ -92,7 +92,7 @@ TImage = TypeVar("TImage", bound="Image")
 _IMAGE_DEFAULT_NAME = "(untitled)"
 
 
-class Image(_TkursedState):
+class Image(_BaseState):
     __slots__ = ("__dimensions", "__rgba_pixel_data", "name")
 
     @property
@@ -128,7 +128,7 @@ class Image(_TkursedState):
 
 
 @dataclasses.dataclass(slots=True)
-class State(_TkursedState):
+class State(_BaseState):
     canvas_dimensions: Dimensions = dataclasses.field(
         default_factory=lambda: Dimensions(800, 600)
     )
