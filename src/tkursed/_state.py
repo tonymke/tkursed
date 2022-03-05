@@ -115,6 +115,7 @@ class Image(_BaseState):
         self.__dimensions = Dimensions(concrete_image.width, concrete_image.height)
         self.name = name
         super().__init__()
+        super().__post_init__()
 
     def __bytes__(self) -> bytes:
         return memoryview(self.__rgba_pixel_data)
