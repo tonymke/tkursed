@@ -56,7 +56,10 @@ class Renderer:
             )
         )
 
-        self.__frame_buffer[:] = (*state.pixel, 255) * state.canvas_dimensions.area
+        self.__frame_buffer[:] = (
+            *state.background_color,
+            255,
+        ) * state.canvas_dimensions.area
 
         self.__draw(state.canvas_dimensions, needs_reinit)
         if needs_reinit:

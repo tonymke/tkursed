@@ -241,7 +241,7 @@ class State(_BaseState):
         default_factory=lambda: Dimensions(800, 600)
     )
 
-    pixel: RGBPixel = (0, 0, 0)
+    background_color: RGBPixel = (0, 0, 0)
 
     def validate(self) -> ValidationErrors:
         errors: ValidationErrors = {}
@@ -249,7 +249,7 @@ class State(_BaseState):
         if child_errors := self.canvas_dimensions.validate():
             errors["canvas_dimensions"] = child_errors
 
-        if child_errors := validate_RGBPixel(self.pixel):
+        if child_errors := validate_RGBPixel(self.background_color):
             errors["pixel"] = child_errors
 
         return errors
