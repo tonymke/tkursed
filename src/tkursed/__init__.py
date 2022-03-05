@@ -33,7 +33,6 @@ class Tkursed(tkinter.ttk.Frame):
 
         self.__renderer = _render.Renderer()
 
-        # the frame itself must have a reference to
         tk_image = self.__renderer.render(self.__state)
         if not tk_image:
             raise RuntimeError("first render did not return tk image ref")
@@ -41,7 +40,6 @@ class Tkursed(tkinter.ttk.Frame):
         self.__image_label = tkinter.ttk.Label(self, image=tk_image)
         self.__image_label.pack()
 
-        # start runtime loops
         self.after_idle(self.__logic_loop)
 
     def __logic_loop(self) -> None:
