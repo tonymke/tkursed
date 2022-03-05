@@ -91,9 +91,6 @@ class Dimensions(_BaseState):
         return errors
 
 
-TImage = TypeVar("TImage", bound="Image")
-_IMAGE_DEFAULT_NAME: Final[str] = "(untitled)"
-
 RGBPixel = tuple[int, int, int]
 
 
@@ -106,6 +103,10 @@ def validate_RGBPixel(value: RGBPixel):
             )
 
     return errors
+
+
+TImage = TypeVar("TImage", bound="Image")
+_IMAGE_DEFAULT_NAME: Final[str] = "(untitled)"
 
 
 class Image(_BaseState):
