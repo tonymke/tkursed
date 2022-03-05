@@ -4,54 +4,64 @@ import PIL.ImageTk
 from tkursed import _consts, _state
 
 
-class Image(PIL.ImageTk.PhotoImage):
-    @property
-    def _frame_buffer(self) -> bytearray:
-        return self.__frame_buffer
-
-    def __init__(self, width: int, height: int):
-        if width <= 0:
-            raise ValueError("non-positive width")
-
-        if height <= 0:
-            raise ValueError("non-positive height")
-
-        self.__frame_buffer = bytearray(bytes((0, 0, 0, 255)) * width * height)
-        self.__image = PIL.Image.frombuffer(
-            "RGBA",
-            (width, height),  # mode  # size tuple
-            self.__frame_buffer,  # data buffer
-            "raw",  # decoder name
-            "RGBA",  # decoder arg - mode
-            0,  # decoder arg - stride (bits between pixels)
-            1,  # decoder arg - orientation - up
-        )
-        super().__init__(self.__image)
-
-    def draw(self):
-        frame_buffer_expected_size = self.width() * self.height() * _consts.BPP // 8
-        if len(self.__frame_buffer) != frame_buffer_expected_size:
-            raise RuntimeError("misshapen frame_buffer")
-
-        self.paste(self.__image)
-
-
 class Renderer:
-    def __init__(self, image: Image):
-        self.__image = image
+    def __init__(self):
+        self.__image: PIL.Image.Image
+        self.__tk_image: PIL.ImageTk.PhotoImage
 
-    def render(self, state: _state.State) -> None:
-        if len(state.pixel) + 1 != _consts.BPP // 8:
-            raise RuntimeError("bad renderer state")
+        self.__frame_buffer = bytearray()
 
-        self.__image._frame_buffer[:] = (
-            bytes(
-                (
-                    *state.pixel,
-                    255,
-                )
+    def __draw(self, width: int, height: int, needs_reinit: bool = False) -> None:
+        if needs_reinit:
+            self.__image = PIL.Image.frombuffer(
+                "RGBA",
+                (width, height),  # mode  # size tuple
+                self.__frame_buffer,  # data buffer
+                "raw",  # decoder name
+                "RGBA",  # decoder arg - mode
+                0,  # decoder arg - stride (bits between pixels)
+                1,  # decoder arg - orientation - up
             )
-            * self.__image.width()
-            * self.__image.height()
+            self.__tk_image = PIL.ImageTk.PhotoImage(image=self.__image)
+        else:
+            self.__tk_image.paste(self.__image)
+
+    @staticmethod
+    def __resize_bytearray(desired_len: int, out_ba: bytearray) -> int:
+        if desired_len < 0:
+            raise ValueError("negative desired_len")
+
+        current_len = len(out_ba)
+        resize_amount = desired_len - current_len
+
+        if resize_amount == 0:
+            return 0
+
+        if resize_amount > 0:
+            out_ba[current_len:desired_len] = b"\x00" * resize_amount
+        else:
+            del out_ba[desired_len:]
+
+        assert desired_len == len(
+            out_ba
+        ), f"resize mangled; desired {desired_len}, got {len(out_ba)}"
+
+        return resize_amount
+
+    def render(self, state: _state.State) -> PIL.ImageTk.PhotoImage | None:
+        needs_reinit = bool(
+            self.__resize_bytearray(
+                state.canvas_width * state.canvas_height * _consts.BPP // 8,
+                self.__frame_buffer,
+            )
         )
-        self.__image.draw()
+
+        self.__frame_buffer[:] = (
+            (*state.pixel, 255) * state.canvas_width * state.canvas_height
+        )
+
+        self.__draw(state.canvas_width, state.canvas_height, needs_reinit)
+        if needs_reinit:
+            return self.__tk_image
+
+        return None

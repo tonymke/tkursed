@@ -33,10 +33,14 @@ class Tkursed(tkinter.ttk.Frame):
         self.__reducer = reducer
         self.__state = State(canvas_width=width, canvas_height=height)
 
-        image = _render.Image(width, height)
-        self.__renderer = _render.Renderer(image)
+        self.__renderer = _render.Renderer()
 
-        self.__image_label = tkinter.ttk.Label(self, image=image)
+        # the frame itself must have a reference to
+        tk_image = self.__renderer.render(self.__state)
+        if not tk_image:
+            raise RuntimeError("first render did not return tk image ref")
+
+        self.__image_label = tkinter.ttk.Label(self, image=tk_image)
         self.__image_label.pack()
 
         # start runtime loops
