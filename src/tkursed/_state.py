@@ -4,6 +4,18 @@ from typing import Any, Callable
 
 from tkursed import _consts
 
+ValidationErrors = dict[str, Any]
+"""The ValidationErrors type represents the results of a Tkursed State objects'
+validate method and that of its children.
+
+The actual type here is
+    ValidationErrors: dict[str, ValueError|
+                                "ValidationErrors"|
+                                set[tuple[Any, Exception|"ValidationErrors"|set[...]]]]
+
+Mypy does not yet support recursive types, unfortunately.
+"""
+
 
 class _TkursedState(abc.ABC):
     def __post_init__(self):
@@ -12,7 +24,20 @@ class _TkursedState(abc.ABC):
             raise ValueError("validation errors", errors)
 
     @abc.abstractmethod
-    def validate(self) -> dict[str, Any]:
+    def validate(self) -> ValidationErrors:
+        """validate returns a data structure with any Exceptions that
+        mark the data as invalid.
+
+        It is a recursive mapping containing one or more attribute names to Exceptions
+        - or in the case of a collection or object, another data structure
+        representing that child state object's errors.
+
+        - Primitives are mapped to their Exceptions.
+        - Sequence and Mapping types are recursively mapped to their children.
+        - Set types are mapped to a set of tuples containing the value that
+            had a validation error and the Exception or recursive structure
+            describing the validation error.
+        """
         raise NotImplementedError
 
 
@@ -32,8 +57,8 @@ class Dimensions(_TkursedState):
     def as_tuple(self) -> tuple[int, int]:
         return (self.width, self.height)
 
-    def validate(self) -> dict[str, Any]:
-        errors: dict[str, ValueError] = {}
+    def validate(self) -> ValidationErrors:
+        errors: ValidationErrors = {}
         if self.width <= 0:
             errors["width"] = ValueError("nonpositive width", self.width)
         if self.height <= 0:
@@ -50,8 +75,8 @@ class State(_TkursedState):
 
     pixel: tuple[int, int, int] = (0, 0, 0)
 
-    def validate(self) -> dict[str, Any]:
-        errors: dict[str, Any] = {}
+    def validate(self) -> ValidationErrors:
+        errors: ValidationErrors = {}
 
         if child_errors := self.canvas_dimensions.validate():
             errors["canvas_dimensions"] = child_errors
