@@ -238,8 +238,8 @@ class PositionedSprite(Sprite):
 
 
 @dataclasses.dataclass(slots=True)
-class State(_BaseState):
-    canvas_dimensions: Dimensions = dataclasses.field(
+class Canvas(_BaseState):
+    dimensions: Dimensions = dataclasses.field(
         default_factory=lambda: Dimensions(800, 600)
     )
 
@@ -248,11 +248,30 @@ class State(_BaseState):
     def validate(self) -> ValidationErrors:
         errors: ValidationErrors = {}
 
-        if child_errors := self.canvas_dimensions.validate():
-            errors["canvas_dimensions"] = child_errors
+        if child_errors := self.dimensions.validate():
+            errors["dimensions"] = child_errors
 
         if child_errors := validate_RGBPixel(self.background_color):
             errors["pixel"] = child_errors
+
+        return errors
+
+
+@dataclasses.dataclass(slots=True)
+class State(_BaseState):
+    canvas: Canvas = dataclasses.field(default_factory=Canvas)
+    tick_rate_ms: int = 1000 // 60
+
+    def validate(self) -> ValidationErrors:
+        errors: ValidationErrors = {}
+
+        if self.tick_rate_ms <= 0:
+            errors["tick_rate_ms"] = ValueError(
+                "nonpositive tick_rate_ms", ("value", self.tick_rate_ms)
+            )
+
+        if child_errors := self.canvas.validate():
+            errors["canvas"] = child_errors
 
         return errors
 

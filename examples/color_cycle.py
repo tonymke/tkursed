@@ -19,7 +19,7 @@ def create_reducer():
         nonlocal color_cycle, last
         if tick - last > 16 or tick == 1:
             last = tick
-            state.background_color = next(color_cycle)
+            state.canvas.background_color = next(color_cycle)
             return state
 
         return None

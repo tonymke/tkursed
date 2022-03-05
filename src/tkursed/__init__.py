@@ -29,7 +29,9 @@ class Tkursed(tkinter.ttk.Frame):
         self.__logic_tick = 0
         self.__logic_tick_rate_ms = tick_rate_ms
         self.__reducer = reducer
-        self.__state = State(canvas_dimensions=Dimensions(width, height))
+        self.__state = State()
+        self.__state.tick_rate_ms = tick_rate_ms
+        self.__state.canvas.dimensions = Dimensions(width, height)
 
         self.__renderer = _render.Renderer()
 

@@ -51,17 +51,17 @@ class Renderer:
     def render(self, state: _state.State) -> PIL.ImageTk.PhotoImage | None:
         needs_reinit = bool(
             self.__resize_bytearray(
-                state.canvas_dimensions.area_rgba_bytes,
+                state.canvas.dimensions.area_rgba_bytes,
                 self.__frame_buffer,
             )
         )
 
         self.__frame_buffer[:] = (
-            *state.background_color,
+            *state.canvas.background_color,
             255,
-        ) * state.canvas_dimensions.area
+        ) * state.canvas.dimensions.area
 
-        self.__draw(state.canvas_dimensions, needs_reinit)
+        self.__draw(state.canvas.dimensions, needs_reinit)
         if needs_reinit:
             return self.__tk_image
 
