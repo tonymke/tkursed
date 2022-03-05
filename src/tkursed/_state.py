@@ -42,6 +42,15 @@ class _TkursedState(abc.ABC):
 
 
 @dataclasses.dataclass(slots=True)
+class Coordinates(_TkursedState):
+    x: int
+    y: int
+
+    def validate(self) -> ValidationErrors:
+        return {}
+
+
+@dataclasses.dataclass(slots=True)
 class Dimensions(_TkursedState):
     width: int
     height: int
