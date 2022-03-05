@@ -4,7 +4,7 @@ import tkinter.ttk
 from typing import TypeVar, cast
 
 from tkursed import _render
-from tkursed._state import Reducer, State
+from tkursed._state import Dimensions, Reducer, State
 
 T = TypeVar("T")
 
@@ -31,7 +31,7 @@ class Tkursed(tkinter.ttk.Frame):
         self.__logic_tick = 0
         self.__logic_tick_rate_ms = tick_rate_ms
         self.__reducer = reducer
-        self.__state = State(canvas_width=width, canvas_height=height)
+        self.__state = State(canvas_dimensions=Dimensions(width, height))
 
         self.__renderer = _render.Renderer()
 

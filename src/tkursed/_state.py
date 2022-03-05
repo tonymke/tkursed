@@ -1,6 +1,8 @@
 import abc
 import dataclasses
-from typing import Callable
+from typing import Any, Callable
+
+from tkursed import _consts
 
 
 class _TkursedState(abc.ABC):
@@ -10,26 +12,49 @@ class _TkursedState(abc.ABC):
             raise ValueError("validation errors", errors)
 
     @abc.abstractmethod
-    def validate(self) -> dict[str, ValueError]:
+    def validate(self) -> dict[str, Any]:
         raise NotImplementedError
 
 
 @dataclasses.dataclass(slots=True)
+class Dimensions(_TkursedState):
+    width: int
+    height: int
+
+    @property
+    def area(self):
+        return self.width * self.height
+
+    @property
+    def area_rgba_bytes(self):
+        return self.area * _consts.BPP // 8
+
+    def as_tuple(self) -> tuple[int, int]:
+        return (self.width, self.height)
+
+    def validate(self) -> dict[str, Any]:
+        errors: dict[str, ValueError] = {}
+        if self.width <= 0:
+            errors["width"] = ValueError("nonpositive width", self.width)
+        if self.height <= 0:
+            errors["height"] = ValueError("nonpositive height", self.height)
+
+        return errors
+
+
+@dataclasses.dataclass(slots=True)
 class State(_TkursedState):
-    canvas_width: int = 800
-    canvas_height: int = 600
+    canvas_dimensions: Dimensions = dataclasses.field(
+        default_factory=lambda: Dimensions(800, 600)
+    )
+
     pixel: tuple[int, int, int] = (0, 0, 0)
 
-    def validate(self) -> dict[str, ValueError]:
-        errors: dict[str, ValueError] = {}
-        if self.canvas_width <= 0:
-            errors["canvas_width"] = ValueError(
-                "nonpositive canvas_width", self.canvas_width
-            )
-        if self.canvas_height <= 0:
-            errors["canvas_height"] = ValueError(
-                "nonpositive canvas_height", self.canvas_height
-            )
+    def validate(self) -> dict[str, Any]:
+        errors: dict[str, Any] = {}
+
+        if child_errors := self.canvas_dimensions.validate():
+            errors["canvas_dimensions"] = child_errors
 
         if any((v for v in self.pixel if not 0 <= v <= 255)):
             errors["pixel"] = ValueError(

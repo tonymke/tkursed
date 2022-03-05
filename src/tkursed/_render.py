@@ -1,7 +1,7 @@
 import PIL.Image
 import PIL.ImageTk
 
-from tkursed import _consts, _state
+from tkursed import _state
 
 
 class Renderer:
@@ -11,11 +11,11 @@ class Renderer:
 
         self.__frame_buffer = bytearray()
 
-    def __draw(self, width: int, height: int, needs_reinit: bool = False) -> None:
+    def __draw(self, dimensions: _state.Dimensions, needs_reinit: bool = False) -> None:
         if needs_reinit:
             self.__image = PIL.Image.frombuffer(
                 "RGBA",
-                (width, height),  # mode  # size tuple
+                dimensions.as_tuple(),  # mode  # size tuple
                 self.__frame_buffer,  # data buffer
                 "raw",  # decoder name
                 "RGBA",  # decoder arg - mode
@@ -51,16 +51,14 @@ class Renderer:
     def render(self, state: _state.State) -> PIL.ImageTk.PhotoImage | None:
         needs_reinit = bool(
             self.__resize_bytearray(
-                state.canvas_width * state.canvas_height * _consts.BPP // 8,
+                state.canvas_dimensions.area_rgba_bytes,
                 self.__frame_buffer,
             )
         )
 
-        self.__frame_buffer[:] = (
-            (*state.pixel, 255) * state.canvas_width * state.canvas_height
-        )
+        self.__frame_buffer[:] = (*state.pixel, 255) * state.canvas_dimensions.area
 
-        self.__draw(state.canvas_width, state.canvas_height, needs_reinit)
+        self.__draw(state.canvas_dimensions, needs_reinit)
         if needs_reinit:
             return self.__tk_image
 
