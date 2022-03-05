@@ -208,6 +208,8 @@ class Sprite(_BaseState):
 
 
 class PositionedSprite(Sprite):
+    __slots__ = ("coordinates",)
+
     coordinates: Coordinates
 
     def __init__(
