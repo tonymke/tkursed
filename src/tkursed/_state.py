@@ -2,7 +2,7 @@ import abc
 import copy
 import dataclasses
 import pathlib
-from typing import Any, BinaryIO, Callable, TypeVar, Union
+from typing import Any, BinaryIO, Callable, Final, TypeVar, Union
 
 import PIL.Image
 
@@ -92,7 +92,7 @@ class Dimensions(_BaseState):
 
 
 TImage = TypeVar("TImage", bound="Image")
-_IMAGE_DEFAULT_NAME = "(untitled)"
+_IMAGE_DEFAULT_NAME: Final[str] = "(untitled)"
 
 RGBPixel = tuple[int, int, int]
 
@@ -144,7 +144,7 @@ class Image(_BaseState):
         return {}
 
 
-_SPRITE_DEFAULT_NAME = "(untitled)"
+_SPRITE_DEFAULT_NAME: Final[str] = "(untitled)"
 
 
 class Sprite(_BaseState):
