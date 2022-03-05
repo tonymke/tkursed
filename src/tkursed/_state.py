@@ -1,8 +1,14 @@
 import abc
+import copy
 import dataclasses
-from typing import Any, Callable
+import pathlib
+from typing import Any, BinaryIO, Callable, TypeVar
+
+import PIL.Image
 
 from tkursed import _consts
+
+FileOrPath = str | bytes | pathlib.Path | BinaryIO
 
 ValidationErrors = dict[str, Any]
 """The ValidationErrors type represents the results of a Tkursed State objects'
@@ -46,6 +52,9 @@ class Coordinates(_TkursedState):
     x: int
     y: int
 
+    def __str__(self) -> str:
+        return f"({self.x},{self.y})"
+
     def validate(self) -> ValidationErrors:
         return {}
 
@@ -63,6 +72,9 @@ class Dimensions(_TkursedState):
     def area_rgba_bytes(self):
         return self.area * _consts.BPP // 8
 
+    def __str__(self) -> str:
+        return f"{self.width}x{self.height}"
+
     def as_tuple(self) -> tuple[int, int]:
         return (self.width, self.height)
 
@@ -74,6 +86,46 @@ class Dimensions(_TkursedState):
             errors["height"] = ValueError("nonpositive height", self.height)
 
         return errors
+
+
+TImage = TypeVar("TImage", bound="Image")
+_IMAGE_DEFAULT_NAME = "(untitled)"
+
+
+class Image(_TkursedState):
+    __slots__ = ("__dimensions", "__rgba_pixel_data", "name")
+
+    @property
+    def dimensions(self) -> Dimensions:
+        return copy.copy(self.__dimensions)
+
+    @property
+    def rgba_pixel_data(self) -> bytes:
+        return memoryview(self.__rgba_pixel_data)
+
+    def __init__(
+        self,
+        image: PIL.Image.Image | FileOrPath,
+        name: str = _IMAGE_DEFAULT_NAME,
+    ) -> None:
+        concrete_image: PIL.Image.Image
+        # mypy does not support match-case :-(
+        if isinstance(image, PIL.Image.Image):
+            concrete_image = image
+        else:
+            concrete_image = PIL.Image.open(image).convert("RGBA")
+
+        self.__rgba_pixel_data = bytes(concrete_image.getdata())
+        self.__dimensions = Dimensions(concrete_image.width, concrete_image.height)
+        self.name = name
+        super().__init__()
+
+    def __str__(self) -> str:
+        return f"<image: {self.name} {self.dimensions}>"
+
+    def validate(self) -> ValidationErrors:
+        # construction, readonly-ness ensures valid data
+        return {}
 
 
 @dataclasses.dataclass(slots=True)
