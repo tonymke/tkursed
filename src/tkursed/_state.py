@@ -23,6 +23,11 @@ Mypy does not yet support recursive types, unfortunately.
 """
 
 
+class InvalidStateError(RuntimeError):
+    def __init__(self, errors: ValidationErrors, msg: str = "runtime state is invalid"):
+        super().__init__(msg, errors)
+
+
 class _BaseState(abc.ABC):
     __slots__: tuple[str, ...] = tuple()
 

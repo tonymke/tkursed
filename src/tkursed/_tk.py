@@ -98,8 +98,14 @@ class Tkursed(tkinter.ttk.Frame):
         self.event_generate(_consts.EVENT_SEQUENCE_TICK, when="now")
 
         if self.is_dirty:
+            if validation_errors := self.tkursed_state.validate():
+                self.stop()
+                self.is_dirty = False
+                raise _state.InvalidStateError(validation_errors)
+
             if new_tk_image := self.__renderer.render(self.tkursed_state):
                 self.__image_label.configure(image=new_tk_image)
+
             self.is_dirty = False
 
     def start(self) -> None:
