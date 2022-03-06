@@ -9,14 +9,18 @@ class Renderer:
         self.__image: PIL.Image.Image
         self.__tk_image: PIL.ImageTk.PhotoImage
 
+        self.__dimensions = (0, 0)
         self.__frame_buffer = bytearray()
 
-    def __draw(self, dimensions: _state.Dimensions, needs_reinit: bool = False) -> None:
-        if needs_reinit:
+    def __draw(
+        self, dimensions: _state.Dimensions, new_frame_buffer: bytearray | None
+    ) -> None:
+        if new_frame_buffer:
+            self.__frame_buffer = new_frame_buffer
             self.__image = PIL.Image.frombuffer(
                 "RGBA",
                 dimensions.as_tuple(),  # mode  # size tuple
-                self.__frame_buffer,  # data buffer
+                new_frame_buffer,  # data buffer
                 "raw",  # decoder name
                 "RGBA",  # decoder arg - mode
                 0,  # decoder arg - stride (bits between pixels)
@@ -26,43 +30,24 @@ class Renderer:
         else:
             self.__tk_image.paste(self.__image)
 
-    @staticmethod
-    def __resize_bytearray(desired_len: int, out_ba: bytearray) -> int:
-        if desired_len < 0:
-            raise ValueError("negative desired_len")
-
-        current_len = len(out_ba)
-        resize_amount = desired_len - current_len
-
-        if resize_amount == 0:
-            return 0
-
-        if resize_amount > 0:
-            out_ba[current_len:desired_len] = b"\x00" * resize_amount
-        else:
-            del out_ba[desired_len:]
-
-        assert desired_len == len(
-            out_ba
-        ), f"resize mangled; desired {desired_len}, got {len(out_ba)}"
-
-        return resize_amount
-
     def render(self, state: _state.State) -> PIL.ImageTk.PhotoImage | None:
-        needs_reinit = bool(
-            self.__resize_bytearray(
-                state.canvas.dimensions.area_rgba_bytes,
-                self.__frame_buffer,
-            )
-        )
+        # bytearrays cannot be resized once exported to C. we need to alloc
+        # a new one :-(
+        if state.canvas.dimensions == self.__dimensions:
+            frame_buffer = self.__frame_buffer
+            new_frame_buffer = None
+        else:
+            frame_buffer = bytearray(state.canvas.dimensions.area_rgba_bytes)
+            new_frame_buffer = frame_buffer
+            self.__dimensions = state.canvas.dimensions.as_tuple()
 
-        self.__frame_buffer[:] = (
+        frame_buffer[:] = (
             *state.canvas.background_color,
             255,
         ) * state.canvas.dimensions.area
 
-        self.__draw(state.canvas.dimensions, needs_reinit)
-        if needs_reinit:
+        self.__draw(state.canvas.dimensions, new_frame_buffer)
+        if new_frame_buffer:
             return self.__tk_image
 
         return None
