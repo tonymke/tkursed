@@ -166,7 +166,7 @@ _SPRITE_DEFAULT_NAME: Final[str] = "(untitled)"
 
 
 class Sprite(_BaseState):
-    __slots__ = ("activte_key", "images", "name")
+    __slots__ = ("active_key", "images", "name")
 
     @property
     def active(self) -> Image:
