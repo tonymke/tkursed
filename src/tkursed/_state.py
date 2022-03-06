@@ -72,6 +72,18 @@ class Dimensions(_BaseState):
     def area_rgba_bytes(self):
         return self.area * _consts.BPP // 8
 
+    def __eq__(self, other: Any) -> bool:
+        if self is other:
+            return True
+
+        if isinstance(other, Dimensions):
+            return self.width == other.width and self.height == other.height
+
+        if isinstance(other, tuple) and len(other) == 2:
+            return self.width == other[0] and self.height == other[1]
+
+        return False
+
     def __str__(self) -> str:
         return f"{self.width}x{self.height}"
 

@@ -9,16 +9,20 @@ class ExampleWindow(tkinter.Tk):
     def __init__(self) -> None:
         super().__init__()
         self.title("A tcl/tkursed 2D renderer")
-        self.resizable(False, False)
 
         self.tkursed = tkursed.Tkursed(self)
-        self.tkursed.pack(fill=tkinter.NONE, expand=False, anchor=tkinter.CENTER)
+        self.tkursed.pack(
+            fill=tkinter.BOTH,
+            expand=True,
+            anchor=tkinter.CENTER,
+        )
 
         self.color_cycle = itertools.cycle(
             [
                 (255, 0, 0),
-                (0, 255, 0),
-                (0, 0, 255),
+                # (255, 0, 0),
+                # (0, 255, 0),
+                # (0, 0, 255),
             ]
         )
         self.last = 0

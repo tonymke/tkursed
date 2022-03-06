@@ -45,14 +45,29 @@ class Tkursed(tkinter.ttk.Frame):
             raise RuntimeError("first render did not return tk image ref")
 
         self.__image_label = tkinter.ttk.Label(self, image=tk_image)
-        self.__image_label.pack()
+        self.__image_label.place(
+            anchor=tkinter.NW,
+            width=width,
+            height=height,
+        )
 
+        self.bind("<Configure>", self.__handle_frame_configure)
         self.after_idle(self.__logic_loop, self.tick)
+
+    def __handle_frame_configure(self, event: tkinter.Event) -> None:
+        self.tkursed_state.canvas.dimensions = Dimensions(event.width, event.height)
+        self.__image_label.place(
+            anchor=tkinter.NW,
+            width=event.width,
+            height=event.height,
+        )
+        self.is_dirty = True
 
     def __logic_loop(self, tick: int) -> None:
         self.tick = tick + 1
         self.after(self.tkursed_state.tick_rate_ms, self.__logic_loop, tick + 1)
         self.event_generate(_consts.EVENT_SEQUENCE_TICK, when="now")
+
         if self.is_dirty:
             if new_tk_image := self.__renderer.render(self.tkursed_state):
                 self.__image_label.configure(image=new_tk_image)
