@@ -1,6 +1,9 @@
 import abc
+import sys
 import tkinter
+import tkinter.messagebox
 import tkinter.ttk
+import traceback
 from typing import cast
 
 from tkursed import _consts, _render, _state
@@ -127,20 +130,39 @@ class SimpleTkursedWindow(tkinter.Tk, metaclass=abc.ABCMeta):
         width: int = 800,
         height: int = 600,
         tick_rate_ms: int = 1000 // 60,
+        *args,
+        **kwargs,
     ) -> None:
         super().__init__()
         self.title(title)
 
         self.tkursed = Tkursed(
-            self, width=width, height=height, tick_rate_ms=tick_rate_ms
+            self, *args, width=width, height=height, tick_rate_ms=tick_rate_ms, **kwargs
         )
         self.tkursed.pack(
             fill=tkinter.BOTH,
             expand=True,
             anchor=tkinter.CENTER,
         )
-
         self.bind(_consts.EVENT_SEQUENCE_TICK, self.handle_tick)
+
+    def report_callback_exception(self, exc, val, tb):
+        printed = False
+        try:
+            traceback.print_exception(exc, val, tb, file=sys.stderr)
+            printed = True
+        except IOError:
+            # Pipe is closed. Nothing we can do.
+            pass
+        else:
+            msg = (
+                f"An unhandled {exc.__name__} has occurred and Tkursed's"
+                " rendering loop has stopped."
+            )
+            if printed:
+                msg += "\n\nSee stderr for debugging information."
+
+            tkinter.messagebox.showerror("Unhandled exception", msg)
 
     @abc.abstractmethod
     def handle_tick(self, event: tkinter.Event) -> None:
