@@ -2,11 +2,11 @@ import abc
 import copy
 import dataclasses
 import pathlib
-from typing import Any, BinaryIO, Final, Union
+from typing import Any, BinaryIO, ByteString, Final, TypeVar, Union
 
 import PIL.Image
 
-from tkursed import _consts
+from tkursed import _consts, _image
 
 FileOrPath = str | bytes | pathlib.Path | BinaryIO
 
@@ -121,6 +121,10 @@ def validate_RGBPixel(value: RGBPixel):
     return errors
 
 
+T_IMAGE = TypeVar("T_IMAGE", bound="Image")
+_IMAGE_DEFAULT_NAME: Final[str] = "(untitled)"
+
+
 class Image(_BaseState):
     __slots__ = ("__dimensions", "__rgba_pixel_data", "name")
 
@@ -131,7 +135,7 @@ class Image(_BaseState):
     def __init__(
         self,
         image: PIL.Image.Image | FileOrPath,
-        name: str = "(untitled)",
+        name: str = _IMAGE_DEFAULT_NAME,
     ) -> None:
         # image.load() reads in full, and closes any fds *that PIL itself opened*
         # https://pillow.readthedocs.io/en/stable/reference/open_files.html#image-lifecycle
@@ -167,6 +171,16 @@ class Image(_BaseState):
 
     def __str__(self) -> str:
         return f"<image: {self.name} {self.dimensions}>"
+
+    @classmethod
+    def from_rgba_pixeldata(
+        cls: type[T_IMAGE],
+        data: ByteString,
+        dimensions: Dimensions,
+        name: str = _IMAGE_DEFAULT_NAME,
+    ) -> T_IMAGE:
+        pil_image = _image.rgba_bytes_to_PIL_image(data, dimensions.as_tuple())
+        return cls(pil_image, name)
 
     def validate(self) -> ValidationErrors:
         # construction, readonly-ness ensures valid data
