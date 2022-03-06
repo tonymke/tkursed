@@ -114,9 +114,6 @@ def validate_RGBPixel(value: RGBPixel):
     return errors
 
 
-_IMAGE_DEFAULT_NAME: Final[str] = "(untitled)"
-
-
 class Image(_BaseState):
     __slots__ = ("__dimensions", "__rgba_pixel_data", "name")
 
@@ -127,7 +124,7 @@ class Image(_BaseState):
     def __init__(
         self,
         image: PIL.Image.Image | FileOrPath,
-        name: str = _IMAGE_DEFAULT_NAME,
+        name: str = "(untitled)",
     ) -> None:
         concrete_image: PIL.Image.Image
         # mypy does not support match-case :-(
