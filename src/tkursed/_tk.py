@@ -20,6 +20,10 @@ class Tkursed(tkinter.ttk.Frame):
         "tkursed_state",
     )
 
+    @property
+    def running(self) -> bool:
+        return self.__run
+
     def __init__(
         self,
         *args,
@@ -72,22 +76,18 @@ class Tkursed(tkinter.ttk.Frame):
         )
         self.is_dirty = True
 
-    def __handle_frame_map(self, event: tkinter.Event) -> None:
-        self.__run = True
-        if not self.__loop_interval_key:
-            self.__loop_interval_key = self.after_idle(self.__logic_loop, self.tick)
-
     def __handle_frame_destroy(self, event: tkinter.Event) -> None:
-        self.__run = False
-        if key := self.__loop_interval_key:
-            self.__loop_interval_key = None
-            self.after_cancel(key)
+        self.stop()
 
-    __handle_frame_unmap = __handle_frame_destroy
+    def __handle_frame_map(self, event: tkinter.Event) -> None:
+        self.start()
+
+    def __handle_frame_unmap(self, event: tkinter.Event) -> None:
+        self.stop()
 
     def __logic_loop(self, tick: int) -> None:
         if not self.__run:
-            self.__loop_interval_key = None
+            self.stop()
             return
 
         self.tick = tick + 1
@@ -100,6 +100,17 @@ class Tkursed(tkinter.ttk.Frame):
             if new_tk_image := self.__renderer.render(self.tkursed_state):
                 self.__image_label.configure(image=new_tk_image)
             self.is_dirty = False
+
+    def start(self) -> None:
+        self.__run = True
+        if not self.__loop_interval_key:
+            self.__loop_interval_key = self.after_idle(self.__logic_loop, self.tick)
+
+    def stop(self) -> None:
+        self.__run = False
+        if key := self.__loop_interval_key:
+            self.__loop_interval_key = None
+            self.after_cancel(key)
 
 
 class SimpleTkursedWindow(tkinter.Tk, metaclass=abc.ABCMeta):
