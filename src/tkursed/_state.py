@@ -133,15 +133,20 @@ class Image(_BaseState):
         image: PIL.Image.Image | FileOrPath,
         name: str = "(untitled)",
     ) -> None:
-        concrete_image: PIL.Image.Image
-        # mypy does not support match-case :-(
+        # image.load() reads in full, and closes any fds *that PIL itself opened*
+        # https://pillow.readthedocs.io/en/stable/reference/open_files.html#image-lifecycle
         if isinstance(image, PIL.Image.Image):
-            concrete_image = image
+            image.load()
         else:
-            concrete_image = PIL.Image.open(image).convert("RGBA")
+            with PIL.Image.open(image) as image_:
+                # closes any open FD *if PIL opened it*
+                image = image_
+                image.load()
 
-        self.__rgba_pixel_data = bytes(concrete_image.getdata())
-        self.__dimensions = Dimensions(concrete_image.width, concrete_image.height)
+        image = image.convert("RGBA")
+
+        self.__rgba_pixel_data = bytes(image.convert("RGBA").getdata())
+        self.__dimensions = Dimensions(image.width, image.height)
         self.name = name
         super().__post_init__()
 
