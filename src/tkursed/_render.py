@@ -1,7 +1,7 @@
 import PIL.Image
 import PIL.ImageTk
 
-from tkursed import _state
+from tkursed import _image, _state
 
 
 class Renderer:
@@ -24,14 +24,9 @@ class Renderer:
     ) -> None:
         if new_frame_buffer:
             self.__frame_buffer = new_frame_buffer
-            self.__image = PIL.Image.frombuffer(
-                "RGBA",
-                dimensions.as_tuple(),  # mode  # size tuple
-                new_frame_buffer,  # data buffer
-                "raw",  # decoder name
-                "RGBA",  # decoder arg - mode
-                0,  # decoder arg - stride (bits between pixels)
-                1,  # decoder arg - orientation - up
+            self.__image = _image.rgba_bytes_to_PIL_image(
+                self.__frame_buffer,
+                dimensions.as_tuple(),
             )
             self.__tk_image = PIL.ImageTk.PhotoImage(image=self.__image)
         else:
