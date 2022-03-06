@@ -1,17 +1,23 @@
-import copy
 import tkinter
 import tkinter.ttk
 from typing import cast
 
-from tkursed import _render
-from tkursed._state import Dimensions, TickCallback, State
+from tkursed import _consts, _render
+from tkursed._state import Dimensions, State
 
 
 class Tkursed(tkinter.ttk.Frame):
+    __slots__ = (
+        "__image_label",
+        "__renderer",
+        "is_dirty",
+        "state",
+        "tick",
+    )
+
     def __init__(
         self,
         *args,
-        reducer: TickCallback,
         width: int = 800,
         height: int = 600,
         tick_rate_ms: int = 1000 // 60,
@@ -26,27 +32,28 @@ class Tkursed(tkinter.ttk.Frame):
         kwargs.update(width=width, height=height, class_=self.__class__.__name__)
         super().__init__(*args, **kwargs)
 
-        self.__logic_tick = 0
-        self.__logic_tick_rate_ms = tick_rate_ms
-        self.__reducer = reducer
-        self.__state = State()
-        self.__state.tick_rate_ms = tick_rate_ms
-        self.__state.canvas.dimensions = Dimensions(width, height)
+        self.tick = 0
+        self.is_dirty = False
+        self.tkursed_state = State()
+        self.tkursed_state.tick_rate_ms = tick_rate_ms
+        self.tkursed_state.canvas.dimensions = Dimensions(width, height)
 
         self.__renderer = _render.Renderer()
 
-        tk_image = self.__renderer.render(self.__state)
+        tk_image = self.__renderer.render(self.tkursed_state)
         if not tk_image:
             raise RuntimeError("first render did not return tk image ref")
 
         self.__image_label = tkinter.ttk.Label(self, image=tk_image)
         self.__image_label.pack()
 
-        self.after_idle(self.__logic_loop)
+        self.after_idle(self.__logic_loop, self.tick)
 
-    def __logic_loop(self) -> None:
-        self.__logic_tick += 1
-        self.after(self.__logic_tick_rate_ms, self.__logic_loop)
-        new_renderer_state = self.__reducer(self.__logic_tick, copy.copy(self.__state))
-        if new_renderer_state and new_renderer_state is not self.__state:
-            self.__renderer.render(new_renderer_state)
+    def __logic_loop(self, tick: int) -> None:
+        self.tick = tick + 1
+        self.after(self.tkursed_state.tick_rate_ms, self.__logic_loop, tick + 1)
+        self.event_generate(_consts.EVENT_SEQUENCE_TICK, when="now")
+        if self.is_dirty:
+            if new_tk_image := self.__renderer.render(self.tkursed_state):
+                self.__image_label.configure(image=new_tk_image)
+            self.is_dirty = False

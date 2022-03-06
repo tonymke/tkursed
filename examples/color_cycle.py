@@ -5,36 +5,30 @@ import tkinter
 import tkursed
 
 
-def create_tick_callback():
-    color_cycle = itertools.cycle(
-        [
-            (255, 0, 0),
-            (0, 255, 0),
-            (0, 0, 255),
-        ]
-    )
-    last = 0
-
-    def tick_callback(tick: int, state: tkursed.State) -> tkursed.State | None:
-        nonlocal color_cycle, last
-        if tick - last > 16 or tick == 1:
-            last = tick
-            state.canvas.background_color = next(color_cycle)
-            return state
-
-        return None
-
-    return tick_callback
-
-
 class ExampleWindow(tkinter.Tk):
     def __init__(self) -> None:
         super().__init__()
         self.title("A tcl/tkursed 2D renderer")
         self.resizable(False, False)
 
-        self.tkursed = tkursed.Tkursed(self, reducer=create_tick_callback())
+        self.tkursed = tkursed.Tkursed(self)
         self.tkursed.pack(fill=tkinter.NONE, expand=False, anchor=tkinter.CENTER)
+
+        self.color_cycle = itertools.cycle(
+            [
+                (255, 0, 0),
+                (0, 255, 0),
+                (0, 0, 255),
+            ]
+        )
+        self.last = 0
+        self.bind(tkursed.EVENT_SEQUENCE_TICK, self.handle_tick)
+
+    def handle_tick(self, event: tkinter.Event) -> None:
+        if self.tkursed.tick - self.last > 16 or self.tkursed.tick == 1:
+            self.last = self.tkursed.tick
+            self.tkursed.tkursed_state.canvas.background_color = next(self.color_cycle)
+            self.tkursed.is_dirty = True
 
 
 def main() -> int:

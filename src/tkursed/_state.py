@@ -2,7 +2,7 @@ import abc
 import copy
 import dataclasses
 import pathlib
-from typing import Any, BinaryIO, Callable, Final, Union
+from typing import Any, BinaryIO, Final, Union
 
 import PIL.Image
 
@@ -133,6 +133,18 @@ class Image(_BaseState):
     def __bytes__(self) -> bytes:
         return memoryview(self.__rgba_pixel_data)
 
+    def __eq__(self, other: Any) -> bool:
+        if self is other:
+            return True
+
+        if isinstance(other, Image):
+            return (
+                self.__dimensions == other.__dimensions
+                and self.__rgba_pixel_data == other.__rgba_pixel_data
+            )
+
+        return False
+
     def __str__(self) -> str:
         return f"<image: {self.name} {self.dimensions}>"
 
@@ -188,6 +200,19 @@ class Sprite(_BaseState):
             self.active_key = active_key
             self.images = images
 
+    def __eq__(self, other: Any) -> bool:
+        if self is other:
+            return True
+
+        if isinstance(other, Sprite):
+            return (
+                self.active_key == other.active_key
+                and self.name == other.name
+                and self.images == other.images
+            )
+
+        return False
+
     def __str__(self) -> str:
         return f"<sprite {self.name}>"
 
@@ -222,6 +247,15 @@ class PositionedSprite(Sprite):
             super().__init__(copy.copy(images.images), images.active_key, images.name)
         else:
             super().__init__(images, active_key, name)
+
+    def __eq__(self, other: Any) -> bool:
+        if self is other:
+            return True
+
+        if isinstance(other, PositionedSprite):
+            return self.coordinates == other.coordinates and super().__eq__(other)
+
+        return False
 
     def __str__(self) -> str:
         return f"<sprite {self.name}@{self.coordinates}>"
@@ -271,6 +305,3 @@ class State(_BaseState):
             errors["canvas"] = child_errors
 
         return errors
-
-
-TickCallback = Callable[[int, State], State | None]

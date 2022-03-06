@@ -1,3 +1,4 @@
+from tkursed._consts import EVENT_SEQUENCE_TICK  # noqa: F401
 from tkursed._state import (  # noqa: F401
     Canvas,
     Coordinates,
@@ -5,7 +6,6 @@ from tkursed._state import (  # noqa: F401
     FileOrPath,
     Image,
     PositionedSprite,
-    TickCallback,
     RGBPixel,
     Sprite,
     State,
