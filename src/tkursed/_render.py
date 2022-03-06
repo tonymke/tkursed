@@ -5,6 +5,13 @@ from tkursed import _state
 
 
 class Renderer:
+    __slots__ = (
+        "__dimensions",
+        "__frame_buffer",
+        "__image",
+        "__tk_image",
+    )
+
     def __init__(self):
         self.__image: PIL.Image.Image
         self.__tk_image: PIL.ImageTk.PhotoImage
