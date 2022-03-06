@@ -333,17 +333,23 @@ class Canvas(_BaseState):
 @dataclasses.dataclass(slots=True)
 class State(_BaseState):
     canvas: Canvas = dataclasses.field(default_factory=Canvas)
+    frame_rate: int = 0
     tick_rate_ms: int = 1000 // 60
 
     def validate(self) -> ValidationErrors:
         errors: ValidationErrors = {}
 
+        if child_errors := self.canvas.validate():
+            errors["canvas"] = child_errors
+
+        if self.frame_rate < 0:
+            errors["frame_rate"] = ValueError(
+                "negative frame_rate", ("value", self.frame_rate)
+            )
+
         if self.tick_rate_ms <= 0:
             errors["tick_rate_ms"] = ValueError(
                 "nonpositive tick_rate_ms", ("value", self.tick_rate_ms)
             )
-
-        if child_errors := self.canvas.validate():
-            errors["canvas"] = child_errors
 
         return errors

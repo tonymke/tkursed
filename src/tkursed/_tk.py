@@ -6,13 +6,14 @@ import tkinter.ttk
 import traceback
 from typing import cast
 
-from tkursed import _consts, _render, _state
+from tkursed import _consts, _metrics, _render, _state
 
 AfterKey = str
 
 
 class Tkursed(tkinter.ttk.Frame):
     __slots__ = (
+        "__framerate_monitor",
         "__image_label",
         "__loop_interval_key",
         "__renderer",
@@ -64,6 +65,8 @@ class Tkursed(tkinter.ttk.Frame):
             height=height,
         )
 
+        self.__framerate_iter = _metrics.moving_count(1000.0)
+
         self.bind("<Configure>", self.__handle_frame_configure)
         self.bind("<Destroy>", self.__handle_frame_destroy)
         self.bind("<Map>", self.__handle_frame_map)
@@ -111,6 +114,8 @@ class Tkursed(tkinter.ttk.Frame):
 
             self.is_dirty = False
 
+        self.tkursed_state.frame_rate = next(self.__framerate_iter)
+
     def start(self) -> None:
         self.__run = True
         if not self.__loop_interval_key:
@@ -148,6 +153,7 @@ class SimpleTkursedWindow(tkinter.Tk, metaclass=abc.ABCMeta):
 
     def report_callback_exception(self, exc, val, tb):
         printed = False
+        self.tkursed.stop()
         try:
             traceback.print_exception(exc, val, tb, file=sys.stderr)
             printed = True
