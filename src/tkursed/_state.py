@@ -24,6 +24,8 @@ Mypy does not yet support recursive types, unfortunately.
 
 
 class _BaseState(abc.ABC):
+    __slots__: tuple[str, ...] = tuple()
+
     def __post_init__(self):
         errors = self.validate()
         if errors:
