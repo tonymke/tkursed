@@ -20,9 +20,8 @@ class ExampleWindow(tkinter.Tk):
         self.color_cycle = itertools.cycle(
             [
                 (255, 0, 0),
-                # (255, 0, 0),
-                # (0, 255, 0),
-                # (0, 0, 255),
+                (0, 255, 0),
+                (0, 0, 255),
             ]
         )
         self.last = 0
