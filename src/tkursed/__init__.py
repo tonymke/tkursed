@@ -5,9 +5,11 @@ from tkursed._state import (  # noqa: F401
     Dimensions,
     FileOrPath,
     Image,
+    InvalidStateError,
     PositionedSprite,
     RGBPixel,
     Sprite,
     State,
+    ValidationErrors,
 )
 from tkursed._tk import SimpleTkursedWindow, Tkursed  # noqa: F401
