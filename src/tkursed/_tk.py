@@ -3,8 +3,7 @@ import tkinter
 import tkinter.ttk
 from typing import cast
 
-from tkursed import _consts, _render
-from tkursed._state import Dimensions, State
+from tkursed import _consts, _render, _state
 
 AfterKey = str
 
@@ -45,8 +44,8 @@ class Tkursed(tkinter.ttk.Frame):
         self.__run = False
         self.is_dirty = False
         self.tick = 0
-        self.tkursed_state = State()
-        self.tkursed_state.canvas.dimensions = Dimensions(width, height)
+        self.tkursed_state = _state.State()
+        self.tkursed_state.canvas.dimensions = _state.Dimensions(width, height)
         self.tkursed_state.tick_rate_ms = tick_rate_ms
 
         self.__renderer = _render.Renderer()
@@ -68,7 +67,9 @@ class Tkursed(tkinter.ttk.Frame):
         self.bind("<Unmap>", self.__handle_frame_unmap)
 
     def __handle_frame_configure(self, event: tkinter.Event) -> None:
-        self.tkursed_state.canvas.dimensions = Dimensions(event.width, event.height)
+        self.tkursed_state.canvas.dimensions = _state.Dimensions(
+            event.width, event.height
+        )
         self.__image_label.place(
             anchor=tkinter.NW,
             width=event.width,
