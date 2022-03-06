@@ -36,13 +36,13 @@ class Tkursed(tkinter.ttk.Frame):
         kwargs.update(width=width, height=height, class_=self.__class__.__name__)
         super().__init__(*args, **kwargs)
 
-        self.__run = False
         self.__loop_interval_key: AfterKey | None = None
-        self.tick = 0
+        self.__run = False
         self.is_dirty = False
+        self.tick = 0
         self.tkursed_state = State()
-        self.tkursed_state.tick_rate_ms = tick_rate_ms
         self.tkursed_state.canvas.dimensions = Dimensions(width, height)
+        self.tkursed_state.tick_rate_ms = tick_rate_ms
 
         self.__renderer = _render.Renderer()
 
