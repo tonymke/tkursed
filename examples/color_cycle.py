@@ -5,7 +5,7 @@ import tkinter
 import tkursed
 
 
-class ExampleWindow(tkursed.SimpleTkursedWindow):
+class ColorCycleExample(tkursed.SimpleTkursedWindow):
     def __init__(self) -> None:
         super().__init__()
         self.color_cycle = itertools.cycle(
@@ -25,7 +25,7 @@ class ExampleWindow(tkursed.SimpleTkursedWindow):
 
 
 def main() -> int:
-    ExampleWindow().mainloop()
+    ColorCycleExample().mainloop()
     return 0
 
 
