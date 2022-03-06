@@ -282,11 +282,11 @@ class PositionedSprite(Sprite):
 
 @dataclasses.dataclass(slots=True)
 class Canvas(_BaseState):
+    background_color: RGBPixel = (0, 0, 0)
     dimensions: Dimensions = dataclasses.field(
         default_factory=lambda: Dimensions(800, 600)
     )
-
-    background_color: RGBPixel = (0, 0, 0)
+    sprites: list[PositionedSprite] = dataclasses.field(default_factory=list)
 
     def validate(self) -> ValidationErrors:
         errors: ValidationErrors = {}
@@ -296,6 +296,14 @@ class Canvas(_BaseState):
 
         if child_errors := validate_RGBPixel(self.background_color):
             errors["pixel"] = child_errors
+
+        if child_errors := dict(
+            filter(
+                lambda iv: iv[1],
+                ((str(i), v.validate()) for i, v in enumerate(self.sprites)),
+            )
+        ):
+            errors["sprites"] = child_errors
 
         return errors
 
