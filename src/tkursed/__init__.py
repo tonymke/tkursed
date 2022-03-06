@@ -10,4 +10,4 @@ from tkursed._state import (  # noqa: F401
     Sprite,
     State,
 )
-from tkursed._tk import Tkursed  # noqa: F401
+from tkursed._tk import SimpleTkursedWindow, Tkursed  # noqa: F401

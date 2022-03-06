@@ -1,3 +1,4 @@
+import abc
 import tkinter
 import tkinter.ttk
 from typing import cast
@@ -99,3 +100,30 @@ class Tkursed(tkinter.ttk.Frame):
             if new_tk_image := self.__renderer.render(self.tkursed_state):
                 self.__image_label.configure(image=new_tk_image)
             self.is_dirty = False
+
+
+class SimpleTkursedWindow(tkinter.Tk, metaclass=abc.ABCMeta):
+    def __init__(
+        self,
+        title: str = "A tcl/tkursed 2D renderer",
+        width: int = 800,
+        height: int = 600,
+        tick_rate_ms: int = 1000 // 60,
+    ) -> None:
+        super().__init__()
+        self.title(title)
+
+        self.tkursed = Tkursed(
+            self, width=width, height=height, tick_rate_ms=tick_rate_ms
+        )
+        self.tkursed.pack(
+            fill=tkinter.BOTH,
+            expand=True,
+            anchor=tkinter.CENTER,
+        )
+
+        self.bind(_consts.EVENT_SEQUENCE_TICK, self.handle_tick)
+
+    @abc.abstractmethod
+    def handle_tick(self, event: tkinter.Event) -> None:
+        raise NotImplementedError
