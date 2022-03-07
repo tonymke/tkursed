@@ -268,11 +268,13 @@ class PositionedSprite(Sprite):
 
     def __init__(
         self,
-        coordinates: Coordinates,
         images: Union[Image, dict[str, Image], Sprite],
+        coordinates: Coordinates | None = None,
         active_key: str = "",
         name: str = _SPRITE_DEFAULT_NAME,
     ) -> None:
+        if coordinates is None:
+            coordinates = Coordinates(0, 0)
         self.coordinates = coordinates
 
         if isinstance(images, Sprite):
