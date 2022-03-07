@@ -127,7 +127,7 @@ _IMAGE_DEFAULT_NAME: Final[str] = "(untitled)"
 
 
 class Image(_BaseState):
-    __slots__ = ("dimensions", "pixeldata", "name")
+    __slots__ = ("__pixeldata", "dimensions", "pixeldata", "name")
 
     def __init__(
         self,
@@ -147,9 +147,10 @@ class Image(_BaseState):
         image = image.convert("RGBA")
 
         # getdata gives us a list of pixel tuples
-        self.pixeldata = functools.reduce(
+        self.__pixeldata = functools.reduce(
             lambda acc, v: acc + bytes(v), image.getdata(), bytearray()
         )
+        self.pixeldata = memoryview(self.__pixeldata).toreadonly()
         self.dimensions = Dimensions(image.width, image.height)
         self.name = name
         super().__post_init__()
