@@ -101,7 +101,7 @@ class Tkursed(tkinter.ttk.Frame):
         self.__loop_interval_key = self.after(
             self.tkursed_state.tick_rate_ms, self.__logic_loop, tick + 1
         )
-        self.event_generate(_consts.EVENT_SEQUENCE_TICK, when="now")
+        self.event_generate(_consts.EVENT_SEQUENCE_TICK, when="tail")
 
         if self.is_dirty:
             if validation_errors := self.tkursed_state.validate():
@@ -140,6 +140,9 @@ class SimpleTkursedWindow(tkinter.Tk, metaclass=abc.ABCMeta):
     ) -> None:
         super().__init__()
         self.title(title)
+
+        self.minsize(320, 200)
+        self.maxsize(1024, 768)
 
         self.tkursed = Tkursed(
             self, *args, width=width, height=height, tick_rate_ms=tick_rate_ms, **kwargs

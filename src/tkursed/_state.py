@@ -127,11 +127,7 @@ _IMAGE_DEFAULT_NAME: Final[str] = "(untitled)"
 
 
 class Image(_BaseState):
-    __slots__ = ("__dimensions", "__rgba_pixel_data", "name")
-
-    @property
-    def dimensions(self) -> Dimensions:
-        return copy.copy(self.__dimensions)
+    __slots__ = ("dimensions", "pixeldata", "name")
 
     def __init__(
         self,
@@ -151,16 +147,12 @@ class Image(_BaseState):
         image = image.convert("RGBA")
 
         # getdata gives us a list of pixel tuples
-        pixeldata = functools.reduce(
+        self.pixeldata = functools.reduce(
             lambda acc, v: acc + bytes(v), image.getdata(), bytearray()
         )
-        self.__rgba_pixel_data = bytes(pixeldata)
-        self.__dimensions = Dimensions(image.width, image.height)
+        self.dimensions = Dimensions(image.width, image.height)
         self.name = name
         super().__post_init__()
-
-    def __bytes__(self) -> bytes:
-        return self.__rgba_pixel_data
 
     def __eq__(self, other: Any) -> bool:
         if self is other:
@@ -168,8 +160,8 @@ class Image(_BaseState):
 
         if isinstance(other, Image):
             return (
-                self.__dimensions == other.__dimensions
-                and self.__rgba_pixel_data == other.__rgba_pixel_data
+                self.dimensions == other.dimensions
+                and self.pixeldata == other.pixeldata
             )
 
         return False

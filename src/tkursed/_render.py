@@ -8,6 +8,7 @@ from tkursed import _consts, _image, _state
 
 class Renderer:
     __slots__ = (
+        "__bg_cache",
         "__dimensions",
         "__frame_buffer",
         "__image",
@@ -17,9 +18,9 @@ class Renderer:
     def __init__(self):
         self.__image: PIL.Image.Image
         self.__tk_image: PIL.ImageTk.PhotoImage
-
         self.__dimensions = (0, 0)
         self.__frame_buffer = bytearray()
+        self.__bg_cache = bytes()
 
     def __draw(
         self, dimensions: _state.Dimensions, new_frame_buffer: bytearray | None
@@ -37,6 +38,9 @@ class Renderer:
     def render(self, state: _state.State) -> PIL.ImageTk.PhotoImage | None:
         # bytearrays cannot be resized once exported to C. we need to alloc
         # a new one :-(
+        need_new_bg_cache = (
+            not self.__bg_cache or state.canvas.background_color != self.__bg_cache[:3]
+        )
         if state.canvas.dimensions == self.__dimensions:
             frame_buffer = self.__frame_buffer
             new_frame_buffer = None
@@ -44,12 +48,16 @@ class Renderer:
             frame_buffer = bytearray(state.canvas.dimensions.area_rgba_bytes)
             new_frame_buffer = frame_buffer
             self.__dimensions = state.canvas.dimensions.as_tuple()
+            need_new_bg_cache = True
+
+        if need_new_bg_cache:
+            self.__bg_cache = (
+                bytes((*state.canvas.background_color, 255))
+                * state.canvas.dimensions.area
+            )
 
         # draw background
-        frame_buffer[:] = (
-            *state.canvas.background_color,
-            255,
-        ) * state.canvas.dimensions.area
+        frame_buffer[:] = self.__bg_cache
 
         # draw sprites
         for sprite in state.canvas.sprites:
@@ -107,11 +115,6 @@ def _crop_to_visible_for_dimension(
     )
 
 
-class _RGBAPixelRow(NamedTuple):
-    canvas_index: int
-    pixeldata: bytes
-
-
 # https://softwareengineering.stackexchange.com/a/212813
 def map_2d_coord_to_1d_index(two_dim_plane_width: int, x: int, y: int) -> int:
     return x + two_dim_plane_width * y
@@ -150,12 +153,11 @@ def _render_visible_rows(
     sprite_width_bytes = image.dimensions.width * _consts.BPP // 8
     sprite_window_width_bytes = x_crop.dimension_size * _consts.BPP // 8
     canvas_width_bytes = canvas_dimensions.width * _consts.BPP // 8
-    image_pixeldata = bytes(image)
     for row in range(y_crop.dimension_size):
         if row > 0:
             sprite_i += sprite_width_bytes
             canvas_i += canvas_width_bytes
 
-        frame_buffer[canvas_i : canvas_i + sprite_window_width_bytes] = image_pixeldata[
+        frame_buffer[canvas_i : canvas_i + sprite_window_width_bytes] = image.pixeldata[
             sprite_i : sprite_i + sprite_window_width_bytes
         ]
