@@ -127,7 +127,15 @@ _IMAGE_DEFAULT_NAME: Final[str] = "(untitled)"
 
 
 class Image(_BaseState):
-    __slots__ = ("__pixeldata", "dimensions", "pixeldata", "name")
+    __slots__ = ("__pixeldata", "__dimensions", "pixeldata", "__name")
+
+    @property
+    def dimensions(self) -> Dimensions:
+        return self.__dimensions
+
+    @property
+    def name(self) -> str:
+        return self.__name
 
     def __init__(
         self,
@@ -151,8 +159,8 @@ class Image(_BaseState):
             lambda acc, v: acc + bytes(v), image.getdata(), bytearray()
         )
         self.pixeldata = memoryview(self.__pixeldata).toreadonly()
-        self.dimensions = Dimensions(image.width, image.height)
-        self.name = name
+        self.__dimensions = Dimensions(image.width, image.height)
+        self.__name = name
         super().__post_init__()
 
     def __eq__(self, other: Any) -> bool:
@@ -168,7 +176,7 @@ class Image(_BaseState):
         return False
 
     def __str__(self) -> str:
-        return f"<image: {self.name} {self.dimensions}>"
+        return f"<image: {self.__name or _IMAGE_DEFAULT_NAME} {self.__dimensions}>"
 
     @classmethod
     def from_rgba_pixeldata(
