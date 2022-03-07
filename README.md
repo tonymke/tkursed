@@ -17,8 +17,8 @@ that wasn't meant for it at all - just like our DOS granddevs once did.
     2. `cd tkursed`
 4. Install runtime dependencies via Poetry: `poetry install --no-dev`
 5. Run any of the examples in poetry's virtual environment.
-    1. **POSIX**: `poetry run python examples/animations.py`
-    2. **Windows**: `poetry run python examples\animations.py`
+    1. **POSIX**: `poetry run python examples/sprite_rendering.py`
+    2. **Windows**: `poetry run python examples\sprite_rendering.py`
 
 ## Progress
 
