@@ -1,26 +1,20 @@
-import itertools
 import sys
 import tkinter
+
+import PIL.Image
 
 import tkursed
 
 
 class SquareExample(tkursed.SimpleTkursedWindow):
-    def __init__(self) -> None:
-        super().__init__()
-        self.color_cycle = itertools.cycle(
-            [
-                (255, 0, 0),
-                (0, 255, 0),
-                (0, 0, 255),
-            ]
-        )
-        self.last = 0
-
     def handle_tick(self, event: tkinter.Event) -> None:
-        if self.tkursed.tick - self.last > 16 or self.tkursed.tick == 1:
-            self.last = self.tkursed.tick
-            self.tkursed.tkursed_state.canvas.background_color = next(self.color_cycle)
+        if self.tkursed.tick == 16:
+            self.tkursed.tkursed_state.canvas.sprites = [
+                tkursed.PositionedSprite(
+                    tkursed.Coordinates(50, 50),
+                    tkursed.Image(PIL.Image.new("RGBA", (100, 100), color="#FF0000")),
+                )
+            ]
             self.tkursed.is_dirty = True
 
 

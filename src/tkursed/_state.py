@@ -1,6 +1,7 @@
 import abc
 import copy
 import dataclasses
+import functools
 import pathlib
 from typing import Any, BinaryIO, ByteString, Final, TypeVar, Union
 
@@ -149,13 +150,17 @@ class Image(_BaseState):
 
         image = image.convert("RGBA")
 
-        self.__rgba_pixel_data = bytes(image.convert("RGBA").getdata())
+        # getdata gives us a list of pixel tuples
+        pixeldata = functools.reduce(
+            lambda acc, v: acc + bytes(v), image.getdata(), bytearray()
+        )
+        self.__rgba_pixel_data = bytes(pixeldata)
         self.__dimensions = Dimensions(image.width, image.height)
         self.name = name
         super().__post_init__()
 
     def __bytes__(self) -> bytes:
-        return memoryview(self.__rgba_pixel_data)
+        return self.__rgba_pixel_data
 
     def __eq__(self, other: Any) -> bool:
         if self is other:
