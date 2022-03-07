@@ -11,16 +11,12 @@ from tkursed import _consts, _image
 
 FileOrPath = str | bytes | pathlib.Path | BinaryIO
 
-ValidationErrors = dict[str, Any]
+T_VALIDATION_ERRORS = TypeVar("T_VALIDATION_ERRORS")
+ValidationErrors = dict[
+    str, ValueError | T_VALIDATION_ERRORS | set[tuple[Any, T_VALIDATION_ERRORS]]
+]
 """The ValidationErrors type represents the results of a Tkursed State objects'
 validate method and that of its children.
-
-The actual type here is
-    ValidationErrors: dict[str, ValueError|
-                                "ValidationErrors"|
-                                set[tuple[Any, Exception|"ValidationErrors"|set[...]]]]
-
-Mypy does not yet support recursive types, unfortunately.
 """
 
 
