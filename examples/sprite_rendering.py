@@ -9,7 +9,7 @@ import PIL.Image
 import tkursed
 
 
-class SquareExample(tkursed.SimpleTkursedWindow):
+class SpriteRenderingExample(tkursed.SimpleTkursedWindow):
     def __init__(self):
         super().__init__()
 
@@ -42,7 +42,7 @@ class SquareExample(tkursed.SimpleTkursedWindow):
 
 
 def main() -> int:
-    SquareExample().mainloop()
+    SpriteRenderingExample().mainloop()
     return 0
 
 
