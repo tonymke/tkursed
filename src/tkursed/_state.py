@@ -315,7 +315,7 @@ class Canvas(_BaseState):
             errors["dimensions"] = child_errors
 
         if child_errors := validate_RGBPixel(self.background_color):
-            errors["pixel"] = child_errors
+            errors["background_color"] = child_errors
 
         if child_errors := dict(
             filter(
