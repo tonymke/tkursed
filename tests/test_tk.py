@@ -29,11 +29,11 @@ class UnitTestRoot(tkinter.Tk):
     def __init__(self):
         super().__init__()
 
-        self.ut_window: tkinter.Toplevel | None = None
+        self.ut_window: UnitTestWindow | None = None
         self.ut_window_bind: str | None = None
         self.withdraw()
 
-    def new_window(self, ut_window: tkinter.Toplevel):
+    def new_window(self, ut_window: "UnitTestWindow"):
         self.cleanup_current_window()
         self.ut_window = ut_window
         self.ut_window.bind(EVENT_SEQUENCE_DESTROY, self.handle_window_destroy)
@@ -56,6 +56,12 @@ class UnitTestRoot(tkinter.Tk):
 
         self.ut_window_bind = None
         self.ut_window = None
+
+    def report_callback_exception(self, exc, val, tb):
+        if self.ut_window and self.ut_window.unit_test_ex_handler:
+            self.ut_window.unit_test_ex_handler(val)
+            self.ut_window.tkursed.stop()
+            self.ut_window.tkursed.destroy()
 
 
 # There can only ever be one Tk root per python process.
@@ -110,21 +116,16 @@ class UnitTestWindow(tkinter.Toplevel):
         except Exception as ex:
             self.unit_test_ex_handler(ex)
             self.tkursed.stop()
-            self.update_idletasks()
-            self.destroy()
+            self.tkursed.destroy()
 
     def __handle_destroy_child(self, event: tkinter.Event) -> None:
         self.child_destroyed = True
         self.destroy()
 
-    def report_callback_exception(self, exc, val, tb):
-        self.tkursed.stop()
-        self.destroy()
-
 
 @pytest.fixture
 def ut_window_factory(
-    ut_root,
+    ut_root: UnitTestRoot,
 ) -> Generator[
     Callable[[unit_test_tick_handler_t, unit_test_ex_handler_t], UnitTestWindow],
     None,
@@ -141,6 +142,7 @@ def ut_window_factory(
             unit_test_tick_handler=tick_handler,
             unit_test_ex_handler=ex_handler,
         )
+        ut_root.new_window(ut_window)
         return ut_window
 
     yield factory
@@ -166,8 +168,6 @@ def run_tkinter_test_fn(
     ut_window = ut_window_factory(tick_handler, ex_handler)
 
     unit_state = ut_window.tkursed.tkursed_state
-
-    ut_window.tkursed.start()
 
     while (
         run
@@ -201,3 +201,21 @@ def test_tick_increment(
     )
     assert len(exceptions) == 0
     assert tick == 3
+
+
+def test_validation_failure_stops_logic_loop(
+    ut_root: UnitTestRoot,
+    ut_window_factory: Callable[
+        [unit_test_tick_handler_t, unit_test_ex_handler_t], UnitTestWindow
+    ],
+):
+    def tick_handler(window: tkinter.Toplevel, unit: tkursed.Tkursed):
+        unit.tkursed_state.canvas.background_color = (-1, 0, 0)
+        unit.is_dirty = True
+
+    _, exceptions = run_tkinter_test_fn(
+        ut_root=ut_root, ut_window_factory=ut_window_factory, tick_handler=tick_handler
+    )
+    assert len(exceptions) == 1
+    ex = exceptions.pop()
+    assert isinstance(ex, tkursed.InvalidStateError)
