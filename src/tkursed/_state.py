@@ -230,11 +230,13 @@ class Sprite(_BaseState):
 
         self.name = name
         if isinstance(images, Image):
-            self.active_key = ""
-            self.images = {"": images}
+            self.active_key = active_key
+            self.images = {active_key: images}
         else:
             self.active_key = active_key
             self.images = images
+
+        self.__post_init__()
 
     def __eq__(self, other: Any) -> bool:
         if self is other:
