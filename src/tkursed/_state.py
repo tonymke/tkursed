@@ -261,7 +261,12 @@ class Sprite(_BaseState):
         if self.active_key not in self.images:
             errors["active_key"] = ValueError("active_key not in images dict keys")
 
-        if any(child_errors := {k: v.validate() for k, v in self.images.items()}):
+        child_errors = {}
+        for k, v in self.images.items():
+            if err := v.validate():
+                child_errors[k] = err
+
+        if child_errors:
             errors["images"] = child_errors
 
         return errors
