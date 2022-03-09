@@ -77,6 +77,22 @@ def test_image_construction(
     assert bytes(constructor(*args).pixeldata) == bytes((255, 0, 0, 255)) * 50 * 50
 
 
+@pytest.mark.parametrize(
+    "input, result_truthiness",
+    [
+        [(0, 1, 2), False],
+        [(-1, 1, 2), True],
+        [(256, 1, 2), True],
+        [(0, -1, 2), True],
+        [(0, 256, 2), True],
+        [(0, 0, 256), True],
+        [(0, 0, 256), True],
+    ],
+)
+def test_rgbpixel_validation(input: _state.RGBPixel, result_truthiness: bool):
+    assert bool(_state.validate_RGBPixel(input)) is result_truthiness
+
+
 def test_sprite_construction(sample_image: _state.Image):
     unit = _state.Sprite(sample_image, name="a_name")
     assert unit.active is sample_image
