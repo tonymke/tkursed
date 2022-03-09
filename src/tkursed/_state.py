@@ -273,7 +273,7 @@ class PositionedSprite(Sprite):
     def __init__(
         self,
         images: Union[Image, dict[str, Image], Sprite],
-        coordinates: Coordinates | None = None,
+        coordinates: Coordinates,
         active_key: str = "",
         name: str = _SPRITE_DEFAULT_NAME,
     ) -> None:

@@ -38,7 +38,7 @@ def sample_image_sprite(sample_image) -> _state.Sprite:
 
 @pytest.fixture
 def sample_image_positioned_sprite(sample_image) -> _state.Sprite:
-    return _state.PositionedSprite(sample_image)
+    return _state.PositionedSprite(sample_image, _state.Coordinates(0, 0))
 
 
 def mutate_instance_attrs(
