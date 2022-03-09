@@ -267,7 +267,7 @@ class Sprite(_BaseState):
                 child_errors[k] = err
 
         if child_errors:
-            errors["images"] = child_errors
+            errors["images"] = child_errors.copy()
 
         return errors
 
@@ -325,10 +325,10 @@ class Canvas(_BaseState):
         errors: ValidationErrors = {}
 
         if child_errors := self.dimensions.validate():
-            errors["dimensions"] = child_errors
+            errors["dimensions"] = child_errors.copy()
 
         if child_errors := validate_RGBPixel(self.background_color):
-            errors["background_color"] = child_errors
+            errors["background_color"] = child_errors.copy()
 
         if child_errors := dict(
             filter(
@@ -336,7 +336,7 @@ class Canvas(_BaseState):
                 ((str(i), v.validate()) for i, v in enumerate(self.sprites)),
             )
         ):
-            errors["sprites"] = child_errors
+            errors["sprites"] = dict(child_errors)
 
         return errors
 
@@ -351,7 +351,7 @@ class State(_BaseState):
         errors: ValidationErrors = {}
 
         if child_errors := self.canvas.validate():
-            errors["canvas"] = child_errors
+            errors["canvas"] = child_errors.copy()
 
         if self.frame_rate < 0:
             errors["frame_rate"] = ValueError(
