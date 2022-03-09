@@ -77,6 +77,19 @@ def test_image_construction(
     assert bytes(constructor(*args).pixeldata) == bytes((255, 0, 0, 255)) * 50 * 50
 
 
+def test_sprite_construction(sample_image: _state.Image):
+    unit = _state.Sprite(sample_image, name="a_name")
+    assert unit.active is sample_image
+    assert unit.name == "a_name"
+
+    unit = _state.Sprite({"foo": sample_image}, active_key="foo")
+    assert sample_image is unit.images["foo"]
+
+    with pytest.raises(ValueError):
+        unit = _state.Sprite({"foo": sample_image}, active_key="bar")
+        assert sample_image is unit.images["foo"]
+
+
 @pytest.mark.parametrize(
     "state_klasslike, attr_overrides",
     [
