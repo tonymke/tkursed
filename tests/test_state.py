@@ -59,6 +59,25 @@ def mutate_instance_attrs(
 
 
 @pytest.mark.parametrize(
+    "constructor, args",
+    [
+        (_state.Image, lazy_fixture("sample_image_path")),
+        (_state.Image, lazy_fixture("sample_pil_image")),
+        (
+            _state.Image.from_rgba_pixeldata,
+            [bytes((255, 0, 0, 255)) * 50 * 50, _state.Dimensions(50, 50)],
+        ),
+    ],
+)
+def test_image_construction(
+    constructor: Callable[..., _state.Image], args: Any | list[Any]
+):
+    if not isinstance(args, list):
+        args = [args]
+    assert bytes(constructor(*args).pixeldata) == bytes((255, 0, 0, 255)) * 50 * 50
+
+
+@pytest.mark.parametrize(
     "state_klasslike, attr_overrides",
     [
         (lambda: _state.Dimensions(1, 1), [("width", 0)]),
