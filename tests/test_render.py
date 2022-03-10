@@ -66,3 +66,56 @@ def test_sprite_render() -> None:
             )
         else:
             assert row == bg_pixel * canvas_dim.width
+
+
+def test_sprite_frameswap() -> None:
+    bg_color = (0, 0, 0)
+    bg_pixel = bytes((*bg_color, 255))
+    canvas_dim = tkursed.Dimensions(5, 5)
+    sprite_1_pixel = bytes((1, 1, 1, 255))
+    sprite_2_pixel = bytes((2, 2, 2, 255))
+
+    sprite_1_dim = tkursed.Dimensions(3, 3)
+    sprite_2_dim = tkursed.Dimensions(4, 4)
+
+    sprite = tkursed.PositionedSprite(
+        {
+            "1": tkursed.Image.from_rgba_pixeldata(
+                bytes(sprite_1_pixel) * sprite_1_dim.area,
+                sprite_1_dim,
+            ),
+            "2": tkursed.Image.from_rgba_pixeldata(
+                bytes(sprite_2_pixel) * sprite_2_dim.area,
+                sprite_2_dim,
+            ),
+        },
+        tkursed.Coordinates(0, 0),
+        active_key="1",
+    )
+
+    unit = tkursed.Renderer()
+    sprite_iter = (
+        ("1", sprite_1_pixel, sprite_1_dim),
+        ("2", sprite_2_pixel, sprite_2_dim),
+    )
+    for frame_key, sprite_pixel, sprite_dim in sprite_iter:
+        sprite.active_key = frame_key
+        unit.render(
+            tkursed.State(
+                canvas=tkursed.Canvas(
+                    background_color=bg_color, dimensions=canvas_dim, sprites=[sprite]
+                ),
+            ),
+            __is_headless=True,
+        )
+        frame_buffer = bytes(unit)
+
+        for i, row in enumerate(
+            split_sequence_by_step(frame_buffer, canvas_dim.width * len(bg_pixel))
+        ):
+            if i < sprite_dim.height:
+                assert row == sprite_pixel * sprite_dim.width + bg_pixel * (
+                    canvas_dim.width - sprite_dim.width
+                )
+            else:
+                assert row == bg_pixel * canvas_dim.width
