@@ -7,22 +7,9 @@ import pytest
 import tkursed
 
 EVENT_SEQUENCE_DESTROY: Final[str] = "<Destroy>"
-unit_test_tick_handler_t = Callable[[tkinter.Toplevel, tkursed.Tkursed], None]
+
 unit_test_ex_handler_t = Callable[[Exception], None]
-
-
-@pytest.fixture(scope="module")
-def simple_tick_handler_factory():
-    def factory(stop_at_tick: int):
-        def impl(
-            window: tkinter.Tk, unit: tkursed.Tkursed, event: tkinter.Event
-        ) -> bool:
-            nonlocal stop_at_tick
-            return unit.tick >= stop_at_tick
-
-        return impl
-
-    return factory
+unit_test_tick_handler_t = Callable[[tkinter.Toplevel, tkursed.Tkursed], None]
 
 
 class UnitTestRoot(tkinter.Tk):
@@ -32,14 +19,6 @@ class UnitTestRoot(tkinter.Tk):
         self.ut_window: UnitTestWindow | None = None
         self.ut_window_bind: str | None = None
         self.withdraw()
-
-    def new_window(self, ut_window: "UnitTestWindow"):
-        self.cleanup_current_window()
-        self.ut_window = ut_window
-        self.ut_window.bind(EVENT_SEQUENCE_DESTROY, self.handle_window_destroy)
-
-    def handle_window_destroy(self, event: tkinter.Event) -> None:
-        self.cleanup_current_window()
 
     def cleanup_current_window(self) -> None:
         if self.ut_window_bind:
@@ -57,11 +36,54 @@ class UnitTestRoot(tkinter.Tk):
         self.ut_window_bind = None
         self.ut_window = None
 
+    def handle_window_destroy(self, event: tkinter.Event) -> None:
+        self.cleanup_current_window()
+
+    def new_window(self, ut_window: "UnitTestWindow"):
+        self.cleanup_current_window()
+        self.ut_window = ut_window
+        self.ut_window.bind(EVENT_SEQUENCE_DESTROY, self.handle_window_destroy)
+
     def report_callback_exception(self, exc, val, tb):
         if self.ut_window and self.ut_window.unit_test_ex_handler:
             self.ut_window.unit_test_ex_handler(val)
             self.ut_window.tkursed.stop()
             self.ut_window.tkursed.destroy()
+
+
+class UnitTestWindow(tkinter.Toplevel):
+    def __init__(
+        self,
+        parent: tkinter.Misc,
+        unit_test_tick_handler: unit_test_tick_handler_t,
+        unit_test_ex_handler: unit_test_ex_handler_t,
+    ) -> None:
+        super().__init__(parent)
+
+        self.tkursed = tkursed.Tkursed(self)
+        self.tkursed.pack(
+            fill=tkinter.BOTH,
+            expand=True,
+            anchor=tkinter.CENTER,
+        )
+        self.unit_test_tick_handler = unit_test_tick_handler
+        self.unit_test_ex_handler = unit_test_ex_handler
+        self.child_destroyed = False
+        self.bind(tkursed.EVENT_SEQUENCE_TICK, self.handle_tick)
+        self.tkursed.bind(EVENT_SEQUENCE_DESTROY, self.__handle_destroy_child)
+        self.withdraw()
+
+    def handle_tick(self, event: tkinter.Event) -> None:
+        try:
+            self.unit_test_tick_handler(self, self.tkursed)
+        except Exception as ex:
+            self.unit_test_ex_handler(ex)
+            self.tkursed.stop()
+            self.tkursed.destroy()
+
+    def __handle_destroy_child(self, event: tkinter.Event) -> None:
+        self.child_destroyed = True
+        self.destroy()
 
 
 # There can only ever be one Tk root per python process.
@@ -76,51 +98,6 @@ def ut_root():
         root.destroy()
     except Exception:
         pass
-
-
-class UnitTestWindow(tkinter.Toplevel):
-    def __init__(
-        self,
-        parent: tkinter.Misc,
-        unit_test_tick_handler: unit_test_tick_handler_t,
-        unit_test_ex_handler: unit_test_ex_handler_t,
-        title: str = "A tcl/tkursed 2D renderer",
-        width: int = 60,
-        height: int = 60,
-        tick_rate_ms: int = 1000 // 30,
-    ) -> None:
-        super().__init__(parent)
-        self.title(title)
-
-        self.tkursed = tkursed.Tkursed(
-            self,
-            width=width,
-            height=height,
-            tick_rate_ms=tick_rate_ms,
-        )
-        self.tkursed.pack(
-            fill=tkinter.BOTH,
-            expand=True,
-            anchor=tkinter.CENTER,
-        )
-        self.unit_test_tick_handler = unit_test_tick_handler
-        self.unit_test_ex_handler = unit_test_ex_handler
-        self.child_destroyed = False
-        self.bind(tkursed.EVENT_SEQUENCE_TICK, self.handle_tick)
-        self.tkursed.bind("<Destroy>", self.__handle_destroy_child)
-        self.withdraw()
-
-    def handle_tick(self, event: tkinter.Event) -> None:
-        try:
-            self.unit_test_tick_handler(self, self.tkursed)
-        except Exception as ex:
-            self.unit_test_ex_handler(ex)
-            self.tkursed.stop()
-            self.tkursed.destroy()
-
-    def __handle_destroy_child(self, event: tkinter.Event) -> None:
-        self.child_destroyed = True
-        self.destroy()
 
 
 @pytest.fixture
@@ -156,23 +133,21 @@ def run_tkinter_test_fn(
     ],
     tick_handler: unit_test_tick_handler_t,
 ) -> tuple[tkursed.State, list[Exception]]:
-    run = True
     started = False
     exceptions = []
 
     def ex_handler(ex: Exception):
-        nonlocal exceptions, run
+        nonlocal exceptions
         exceptions.append(ex)
-        run = False
 
     ut_window = ut_window_factory(tick_handler, ex_handler)
 
     unit_state = ut_window.tkursed.tkursed_state
 
     while (
-        run
+        (ut_window.tkursed.running or not started)
+        and not exceptions
         and not ut_window.child_destroyed
-        and (ut_window.tkursed.running or not started)
     ):
         if not started:
             ut_window.tkursed.start()
