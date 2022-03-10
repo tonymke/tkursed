@@ -5,7 +5,7 @@ import PIL.Image
 import pytest
 from pytest_lazyfixture import lazy_fixture
 
-from tkursed import _state
+import tkursed
 
 T = TypeVar("T")
 
@@ -27,18 +27,18 @@ def sample_pil_image(sample_image_path: str | bytes) -> PIL.Image.Image:
 
 
 @pytest.fixture
-def sample_image(sample_pil_image: PIL.Image.Image) -> _state.Image:
-    return _state.Image(sample_pil_image)
+def sample_image(sample_pil_image: PIL.Image.Image) -> tkursed.Image:
+    return tkursed.Image(sample_pil_image)
 
 
 @pytest.fixture
-def sample_image_sprite(sample_image) -> _state.Sprite:
-    return _state.Sprite(sample_image)
+def sample_image_sprite(sample_image) -> tkursed.Sprite:
+    return tkursed.Sprite(sample_image)
 
 
 @pytest.fixture
-def sample_image_positioned_sprite(sample_image) -> _state.Sprite:
-    return _state.PositionedSprite(sample_image, _state.Coordinates(0, 0))
+def sample_image_positioned_sprite(sample_image) -> tkursed.Sprite:
+    return tkursed.PositionedSprite(sample_image, tkursed.Coordinates(0, 0))
 
 
 def mutate_instance_attrs(
@@ -61,16 +61,16 @@ def mutate_instance_attrs(
 @pytest.mark.parametrize(
     "constructor, args",
     [
-        (_state.Image, lazy_fixture("sample_image_path")),
-        (_state.Image, lazy_fixture("sample_pil_image")),
+        (tkursed.Image, lazy_fixture("sample_image_path")),
+        (tkursed.Image, lazy_fixture("sample_pil_image")),
         (
-            _state.Image.from_rgba_pixeldata,
-            [bytes((255, 0, 0, 255)) * 50 * 50, _state.Dimensions(50, 50)],
+            tkursed.Image.from_rgba_pixeldata,
+            [bytes((255, 0, 0, 255)) * 50 * 50, tkursed.Dimensions(50, 50)],
         ),
     ],
 )
 def test_image_construction(
-    constructor: Callable[..., _state.Image], args: Any | list[Any]
+    constructor: Callable[..., tkursed.Image], args: Any | list[Any]
 ):
     if not isinstance(args, list):
         args = [args]
@@ -89,36 +89,36 @@ def test_image_construction(
         [(0, 0, 256), True],
     ],
 )
-def test_rgbpixel_validation(input: _state.RGBPixel, result_truthiness: bool):
-    assert bool(_state.validate_RGBPixel(input)) is result_truthiness
+def test_rgbpixel_validation(input: tkursed.RGBPixel, result_truthiness: bool):
+    assert bool(tkursed.validate_RGBPixel(input)) is result_truthiness
 
 
-def test_sprite_construction(sample_image: _state.Image):
-    unit = _state.Sprite(sample_image, name="a_name")
+def test_sprite_construction(sample_image: tkursed.Image):
+    unit = tkursed.Sprite(sample_image, name="a_name")
     assert unit.active is sample_image
     assert unit.name == "a_name"
 
-    unit = _state.Sprite({"foo": sample_image}, active_key="foo")
+    unit = tkursed.Sprite({"foo": sample_image}, active_key="foo")
     assert sample_image is unit.images["foo"]
 
     with pytest.raises(ValueError):
-        unit = _state.Sprite({"foo": sample_image}, active_key="bar")
+        unit = tkursed.Sprite({"foo": sample_image}, active_key="bar")
         assert sample_image is unit.images["foo"]
 
 
 @pytest.mark.parametrize(
     "state_klasslike, attr_overrides",
     [
-        (lambda: _state.Dimensions(1, 1), [("width", 0)]),
-        (lambda: _state.Dimensions(1, 1), [("height", -1)]),
+        (lambda: tkursed.Dimensions(1, 1), [("width", 0)]),
+        (lambda: tkursed.Dimensions(1, 1), [("height", -1)]),
         (lazy_fixture("sample_image_sprite"), [("active_key", "fail"), ("images", {})]),
         (lazy_fixture("sample_image_positioned_sprite"), []),
-        (_state.Canvas, [("background_color", (-1, 0, 0))]),
-        (_state.State, [("tick_rate_ms", -1)]),
+        (tkursed.Canvas, [("background_color", (-1, 0, 0))]),
+        (tkursed.State, [("tick_rate_ms", -1)]),
     ],
 )
 def test_validation(
-    state_klasslike: _state.BaseState | Callable[..., _state.BaseState],
+    state_klasslike: tkursed.BaseState | Callable[..., tkursed.BaseState],
     attr_overrides: list[tuple[str, Any]],
 ):
     unit = mutate_instance_attrs(state_klasslike, attr_overrides)
