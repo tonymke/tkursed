@@ -175,3 +175,14 @@ def test_sprite_cropping_y_down(state: tkursed.State) -> None:
             assert row == expected_sprite_row
         else:
             assert row == expected_bg_row
+
+
+def test_sprite_off_canvas(state: tkursed.State) -> None:
+    state.canvas.sprites[0].coordinates = tkursed.Coordinates(6, 6)
+
+    state.canvas.sprites = []
+
+    unit = tkursed.Renderer()
+    unit.render(state, __is_headless=True)
+
+    assert bytes(unit) == DEFAULT_CANVAS_PIXEL_RGBA * state.canvas.dimensions.area
