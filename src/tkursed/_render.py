@@ -26,19 +26,28 @@ class Renderer:
         return bytes(self.__frame_buffer)
 
     def __draw(
-        self, dimensions: _state.Dimensions, new_frame_buffer: bytearray | None
+        self,
+        dimensions: _state.Dimensions,
+        new_frame_buffer: bytearray | None,
+        is_headless=False,
     ) -> None:
         if new_frame_buffer:
             self.__frame_buffer = new_frame_buffer
-            self.__image = _image.rgba_bytes_to_PIL_image(
-                self.__frame_buffer,
-                dimensions.as_tuple(),
-            )
-            self.__tk_image = PIL.ImageTk.PhotoImage(image=self.__image)
-        else:
-            self.__tk_image.paste(self.__image)
 
-    def render(self, state: _state.State) -> PIL.ImageTk.PhotoImage | None:
+        if not is_headless:
+            if new_frame_buffer:
+                self.__image = _image.rgba_bytes_to_PIL_image(
+                    self.__frame_buffer,
+                    dimensions.as_tuple(),
+                )
+                self.__tk_image = PIL.ImageTk.PhotoImage(image=self.__image)
+            else:
+                self.__tk_image.paste(self.__image)
+
+    def render(self, state: _state.State, **kwargs) -> PIL.ImageTk.PhotoImage | None:
+        # for unit tests - avoid touching tk objects that require a window
+        is_headless: bool = bool(kwargs.get("__is_headless", False))
+
         # bytearrays cannot be resized once exported to C. we need to alloc
         # a new one :-(
         need_new_bg_cache = (
@@ -66,8 +75,8 @@ class Renderer:
         for sprite in state.canvas.sprites:
             _render_visible_rows(sprite, state.canvas.dimensions, frame_buffer)
 
-        self.__draw(state.canvas.dimensions, new_frame_buffer)
-        if new_frame_buffer:
+        self.__draw(state.canvas.dimensions, new_frame_buffer, is_headless)
+        if new_frame_buffer and not is_headless:
             return self.__tk_image
 
         return None
