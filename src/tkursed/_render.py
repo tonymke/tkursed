@@ -22,6 +22,9 @@ class Renderer:
         self.__frame_buffer = bytearray()
         self.__bg_cache = bytes()
 
+    def __bytes__(self) -> bytes:
+        return bytes(self.__frame_buffer)
+
     def __draw(
         self, dimensions: _state.Dimensions, new_frame_buffer: bytearray | None
     ) -> None:
