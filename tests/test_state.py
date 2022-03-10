@@ -118,7 +118,7 @@ def test_sprite_construction(sample_image: _state.Image):
     ],
 )
 def test_validation(
-    state_klasslike: _state._BaseState | Callable[..., _state._BaseState],
+    state_klasslike: _state.BaseState | Callable[..., _state.BaseState],
     attr_overrides: list[tuple[str, Any]],
 ):
     unit = mutate_instance_attrs(state_klasslike, attr_overrides)

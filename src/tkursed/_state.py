@@ -25,7 +25,7 @@ class InvalidStateError(RuntimeError):
         super().__init__(msg, errors)
 
 
-class _BaseState(abc.ABC):
+class BaseState(abc.ABC):
     __slots__: tuple[str, ...] = tuple()
 
     def __post_init__(self):
@@ -52,7 +52,7 @@ class _BaseState(abc.ABC):
 
 
 @dataclasses.dataclass(slots=True)
-class Coordinates(_BaseState):
+class Coordinates(BaseState):
     x: int
     y: int
 
@@ -64,7 +64,7 @@ class Coordinates(_BaseState):
 
 
 @dataclasses.dataclass(slots=True)
-class Dimensions(_BaseState):
+class Dimensions(BaseState):
     width: int
     height: int
 
@@ -122,7 +122,7 @@ T_IMAGE = TypeVar("T_IMAGE", bound="Image")
 _IMAGE_DEFAULT_NAME: Final[str] = "(untitled)"
 
 
-class Image(_BaseState):
+class Image(BaseState):
     __slots__ = ("__pixeldata", "__dimensions", "pixeldata", "__name")
 
     @property
@@ -192,7 +192,7 @@ class Image(_BaseState):
 _SPRITE_DEFAULT_NAME: Final[str] = "(untitled)"
 
 
-class Sprite(_BaseState):
+class Sprite(BaseState):
     __slots__ = ("active_key", "images", "name")
 
     @property
@@ -314,7 +314,7 @@ class PositionedSprite(Sprite):
 
 
 @dataclasses.dataclass(slots=True)
-class Canvas(_BaseState):
+class Canvas(BaseState):
     background_color: RGBPixel = (0, 0, 0)
     dimensions: Dimensions = dataclasses.field(
         default_factory=lambda: Dimensions(800, 600)
@@ -342,7 +342,7 @@ class Canvas(_BaseState):
 
 
 @dataclasses.dataclass(slots=True)
-class State(_BaseState):
+class State(BaseState):
     canvas: Canvas = dataclasses.field(default_factory=Canvas)
     frame_rate: int = 0
     tick_rate_ms: int = 1000 // 60
