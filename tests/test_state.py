@@ -58,6 +58,15 @@ def mutate_instance_attrs(
     return result
 
 
+def test_base_state_postinit_validation_raises():
+    class Unit(tkursed.BaseState):
+        def validate(self) -> tkursed.ValidationErrors:
+            return {"field_name": ValueError("field name is missing!")}
+
+    with pytest.raises(ValueError):
+        Unit().__post_init__()
+
+
 @pytest.mark.parametrize(
     "constructor, args",
     [

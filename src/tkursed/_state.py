@@ -29,6 +29,7 @@ class BaseState(abc.ABC):
     __slots__: tuple[str, ...] = tuple()
 
     def __post_init__(self):
+        # We use __post_init__ as most of our descendents are dataclasses
         errors = self.validate()
         if errors:
             raise ValueError("validation errors", errors)
