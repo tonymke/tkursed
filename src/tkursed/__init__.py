@@ -12,5 +12,6 @@ from tkursed._state import (  # noqa: F401
     Sprite,
     State,
     ValidationErrors,
+    validate_RGBPixel,
 )
 from tkursed._tk import SimpleTkursedWindow, Tkursed  # noqa: F401
