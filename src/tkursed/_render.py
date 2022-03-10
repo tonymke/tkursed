@@ -116,7 +116,7 @@ def _crop_to_visible_for_dimension(
 
 
 # https://softwareengineering.stackexchange.com/a/212813
-def map_2d_coord_to_1d_index(two_dim_plane_width: int, x: int, y: int) -> int:
+def _map_2d_coord_to_1d_index(two_dim_plane_width: int, x: int, y: int) -> int:
     return x + two_dim_plane_width * y
 
 
@@ -138,12 +138,12 @@ def _render_visible_rows(
         return
 
     sprite_i = (
-        map_2d_coord_to_1d_index(image.dimensions.width, x_crop.coord, y_crop.coord)
+        _map_2d_coord_to_1d_index(image.dimensions.width, x_crop.coord, y_crop.coord)
         * _consts.BPP
         // 8
     )
     canvas_i = (
-        map_2d_coord_to_1d_index(
+        _map_2d_coord_to_1d_index(
             canvas_dimensions.width, x_crop.canvas_coord, y_crop.canvas_coord
         )
         * _consts.BPP
