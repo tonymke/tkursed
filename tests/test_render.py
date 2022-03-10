@@ -119,3 +119,140 @@ def test_sprite_frameswap() -> None:
                 )
             else:
                 assert row == bg_pixel * canvas_dim.width
+
+
+def test_sprite_cropping_x_left() -> None:
+    bg_color = (0, 0, 0)
+    bg_pixel = bytes((*bg_color, 255))
+    canvas_dim = tkursed.Dimensions(5, 5)
+
+    sprite_pixel = bytes((1, 1, 1, 255))
+    sprite_dim = tkursed.Dimensions(3, 3)
+
+    img = tkursed.Image.from_rgba_pixeldata(
+        bytes(sprite_pixel) * sprite_dim.area,
+        sprite_dim,
+    )
+
+    unit = tkursed.Renderer()
+    unit.render(
+        tkursed.State(
+            canvas=tkursed.Canvas(
+                background_color=bg_color,
+                dimensions=canvas_dim,
+                sprites=[tkursed.PositionedSprite(img, tkursed.Coordinates(-1, 0))],
+            ),
+        ),
+        __is_headless=True,
+    )
+    frame_buffer = bytes(unit)
+    for i, row in enumerate(
+        split_sequence_by_step(frame_buffer, canvas_dim.width * len(bg_pixel))
+    ):
+        if i < img.dimensions.height:
+            assert row == sprite_pixel * 2 + bg_pixel * 3
+        else:
+            assert row == bg_pixel * 5
+
+
+def test_sprite_cropping_x_right() -> None:
+    bg_color = (0, 0, 0)
+    bg_pixel = bytes((*bg_color, 255))
+    canvas_dim = tkursed.Dimensions(5, 5)
+
+    sprite_pixel = bytes((1, 1, 1, 255))
+    sprite_dim = tkursed.Dimensions(3, 3)
+
+    img = tkursed.Image.from_rgba_pixeldata(
+        bytes(sprite_pixel) * sprite_dim.area,
+        sprite_dim,
+    )
+
+    unit = tkursed.Renderer()
+    unit.render(
+        tkursed.State(
+            canvas=tkursed.Canvas(
+                background_color=bg_color,
+                dimensions=canvas_dim,
+                sprites=[tkursed.PositionedSprite(img, tkursed.Coordinates(3, 0))],
+            ),
+        ),
+        __is_headless=True,
+    )
+    frame_buffer = bytes(unit)
+    for i, row in enumerate(
+        split_sequence_by_step(frame_buffer, canvas_dim.width * len(bg_pixel))
+    ):
+        if i < img.dimensions.height:
+            assert row == bg_pixel * 3 + sprite_pixel * 2
+        else:
+            assert row == bg_pixel * 5
+
+
+def test_sprite_cropping_y_up() -> None:
+    bg_color = (0, 0, 0)
+    bg_pixel = bytes((*bg_color, 255))
+    canvas_dim = tkursed.Dimensions(5, 5)
+
+    sprite_pixel = bytes((1, 1, 1, 255))
+    sprite_dim = tkursed.Dimensions(3, 3)
+
+    img = tkursed.Image.from_rgba_pixeldata(
+        bytes(sprite_pixel) * sprite_dim.area,
+        sprite_dim,
+    )
+
+    unit = tkursed.Renderer()
+    unit.render(
+        tkursed.State(
+            canvas=tkursed.Canvas(
+                background_color=bg_color,
+                dimensions=canvas_dim,
+                sprites=[tkursed.PositionedSprite(img, tkursed.Coordinates(0, -1))],
+            ),
+        ),
+        __is_headless=True,
+    )
+    frame_buffer = bytes(unit)
+    for i, row in enumerate(
+        split_sequence_by_step(frame_buffer, canvas_dim.width * len(bg_pixel))
+    ):
+        if i < img.dimensions.height - 1:
+            assert row == sprite_pixel * 3 + bg_pixel * 2
+        else:
+            assert row == bg_pixel * 5
+
+
+def test_sprite_cropping_y_down() -> None:
+    bg_color = (0, 0, 0)
+    bg_pixel = bytes((*bg_color, 255))
+    canvas_dim = tkursed.Dimensions(5, 5)
+
+    sprite_pixel = bytes((1, 1, 1, 255))
+    sprite_dim = tkursed.Dimensions(3, 3)
+    sprite_coord = tkursed.Coordinates(0, 4)
+
+    img = tkursed.Image.from_rgba_pixeldata(
+        bytes(sprite_pixel) * sprite_dim.area,
+        sprite_dim,
+    )
+
+    unit = tkursed.Renderer()
+    unit.render(
+        tkursed.State(
+            canvas=tkursed.Canvas(
+                background_color=bg_color,
+                dimensions=canvas_dim,
+                sprites=[tkursed.PositionedSprite(img, tkursed.Coordinates(0, 4))],
+            ),
+        ),
+        __is_headless=True,
+    )
+    frame_buffer = bytes(unit)
+    for i, row in enumerate(
+        split_sequence_by_step(frame_buffer, canvas_dim.width * len(bg_pixel))
+    ):
+        if i >= sprite_coord.y:
+            assert row == sprite_pixel * 3 + bg_pixel * 2
+        else:
+            assert row == bg_pixel * 5
