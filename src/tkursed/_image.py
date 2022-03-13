@@ -6,6 +6,22 @@ import PIL.Image
 def rgba_bytes_to_PIL_image(
     data: ByteString, dimensions: tuple[int, int]
 ) -> PIL.Image.Image:
+    """Create a PIL Image from RGBA pixeldata.
+
+    If data is a bytearray, the resulting image is created with a reference
+    to it; mutating the bytearray data directly mutates the wrapping PIL Image.
+
+    Arguments:
+        data -- ByteString: RGBA pixeldata
+        dimensions -- tuple[int, int]: Length and width the represented image.
+
+    Raises:
+        ValueError: width (dimensions[0]) is <=0
+        ValueError: height (dimensions[1]) is <=0
+
+    Returns:
+        PIL.Image.Image: An RGBA PIL Image.
+    """
 
     if dimensions[0] <= 0:
         raise ValueError("nonpositive width")
