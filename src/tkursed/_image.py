@@ -2,6 +2,8 @@ from typing import ByteString
 
 import PIL.Image
 
+from tkursed import _consts
+
 
 def rgba_bytes_to_PIL_image(
     data: ByteString, dimensions: tuple[int, int]
@@ -16,18 +18,27 @@ def rgba_bytes_to_PIL_image(
         dimensions -- tuple[int, int]: Length and width the represented image.
 
     Raises:
-        ValueError: width (dimensions[0]) is <=0
-        ValueError: height (dimensions[1]) is <=0
+        ValueError: nonpositive dimensions[0] (width)
+        ValueError: nonpositive dimensions[1] (height)
+        ValueError: unexpected data len for given dimensions
 
     Returns:
         PIL.Image.Image: An RGBA PIL Image.
     """
 
     if dimensions[0] <= 0:
-        raise ValueError("nonpositive width")
+        raise ValueError("nonpositive dimensions[0] (width)")
 
     if dimensions[1] <= 0:
-        raise ValueError("nonpositive height")
+        raise ValueError("nonpositive dimensions[1] (height)")
+
+    expected_len = dimensions[0] * dimensions[1] * _consts.BITS_PER_PIXEL // 8
+    if len(data) != expected_len:
+        raise ValueError(
+            "unexpected data len for given dimensions",
+            ("expected", expected_len),
+            ("actual", len(data)),
+        )
 
     if isinstance(data, bytearray):
         fn = PIL.Image.frombuffer
