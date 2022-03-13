@@ -1,3 +1,5 @@
+"""Tools for recording runtime metrics."""
+
 import collections
 import time
 from collections.abc import Generator

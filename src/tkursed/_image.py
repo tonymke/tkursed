@@ -1,3 +1,5 @@
+"""Tools for converting between image formats."""
+
 from typing import ByteString
 
 import PIL.Image

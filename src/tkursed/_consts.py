@@ -1,3 +1,5 @@
+"""Package constants."""
+
 from typing import Final
 
 BPP: Final[int] = 32
