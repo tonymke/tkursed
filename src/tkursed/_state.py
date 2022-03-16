@@ -1,3 +1,5 @@
+"""Application state representations."""
+
 import abc
 import copy
 import dataclasses
@@ -10,18 +12,30 @@ import PIL.Image
 from tkursed import _consts, _image
 
 FileOrPath = str | bytes | pathlib.Path | BinaryIO
+"""The FileOrPath type represents a file-like or a system file path to one. """
 
 T_VALIDATION_ERRORS = TypeVar("T_VALIDATION_ERRORS")
 ValidationErrors = dict[
     str, ValueError | T_VALIDATION_ERRORS | set[tuple[Any, T_VALIDATION_ERRORS]]
 ]
 """The ValidationErrors type represents the results of a Tkursed State objects'
-validate method and that of its children.
-"""
+validate method and that of its children."""
 
 
 class InvalidStateError(RuntimeError):
+    """Indicates the rendering loop was instructed to render an unrenderable
+    State."""
+
     def __init__(self, errors: ValidationErrors, msg: str = "runtime state is invalid"):
+        """Initialize with zero or more ValidationErrors.
+
+        Arguments:
+            errors -- ValidationErrors: The specific ValidationErrors preventing
+                      rendering.
+
+        Keyword Arguments:
+            msg -- str: description of the error (default: {"runtime state is invalid"})
+        """
         super().__init__(msg, errors)
 
 
@@ -36,26 +50,35 @@ class BaseState(abc.ABC):
 
     @abc.abstractmethod
     def validate(self) -> ValidationErrors:
-        """validate returns a data structure with any Exceptions that
-        mark the data as invalid.
+        """Validate the state instance.
 
-        It is a recursive mapping containing one or more attribute names to Exceptions
-        - or in the case of a collection or object, another data structure
-        representing that child state object's errors.
+        Raises:
+            NotImplementedError: The concrete child class did not implement this
+                                 abstract method.
 
-        - Primitives are mapped to their Exceptions.
-        - Sequence and Mapping types are recursively mapped to their children.
-        - Set types are mapped to a set of tuples containing the value that
-            had a validation error and the Exception or recursive structure
-            describing the validation error.
+        Returns:
+            A dictionary mapping fields to any validation errors. An empty, falsy
+            return value indicates no validation errors were found.
         """
         raise NotImplementedError
 
 
 @dataclasses.dataclass(slots=True)
 class Coordinates(BaseState):
+    """A position on a two-dimensional plane."""
+
     x: int
+    """X Coordinate
+
+    Returns:
+        The position of an object on the X dimension of a two-dimensional plane.
+    """
     y: int
+    """Y Coordinate
+
+    Returns:
+        The position of an object on the Y dimension of a two-dimensional plane.
+    """
 
     def __str__(self) -> str:
         return f"({self.x},{self.y})"
@@ -66,15 +89,24 @@ class Coordinates(BaseState):
 
 @dataclasses.dataclass(slots=True)
 class Dimensions(BaseState):
+    """The dimensions of an objct on a two-dimensional plane."""
+
     width: int
+    """The length of an object along the X dimension of a two-dimensional plane."""
+
     height: int
+    """The length of an object along the Y dimension of a two-dimensional plane."""
 
     @property
     def area(self):
+        """The area occupied by the represented dimensions, in cartesian units."""
         return self.width * self.height
 
     @property
     def area_rgba_bytes(self):
+        """The area occupied by the represented dimensions in bytes, with a
+        bytes-per-cartesian unit consistent with tkursed.BITS_PER_PIXEL."""
+
         return self.area * _consts.BPP // 8
 
     def __eq__(self, other: Any) -> bool:
@@ -93,6 +125,11 @@ class Dimensions(BaseState):
         return f"{self.width}x{self.height}"
 
     def as_tuple(self) -> tuple[int, int]:
+        """A tuple representation of the stored dimensions.
+
+        Returns:
+            tuple[width: int, height: int]
+        """
         return (self.width, self.height)
 
     def validate(self) -> ValidationErrors:
@@ -106,9 +143,20 @@ class Dimensions(BaseState):
 
 
 RGBPixel = tuple[int, int, int]
+"""Type representing a single RGB Pixel."""
 
 
 def validate_RGBPixel(value: RGBPixel):
+    """Validate the given RGBPixel represents a valid pixel
+    (all values are 0<=value<=255).
+
+    Arguments:
+        value -- A value in the tuple is out of the range 0 <= value <= 255
+
+    Returns:
+        A dictionary mapping fields to any validation errors. An empty, falsy
+        return value indicates no validation errors were found.
+    """
     errors: ValidationErrors = {}
     for i, pixel in enumerate(value):
         if not 0 <= pixel <= 255:
@@ -124,14 +172,18 @@ _IMAGE_DEFAULT_NAME: Final[str] = "(untitled)"
 
 
 class Image(BaseState):
+    """An image to render on the canvas."""
+
     __slots__ = ("__pixeldata", "__dimensions", "pixeldata", "__name")
 
     @property
     def dimensions(self) -> Dimensions:
+        """The dimensions of the image for reference."""
         return self.__dimensions
 
     @property
     def name(self) -> str:
+        """The name of the image as supplied in initialization, for reference.."""
         return self.__name
 
     def __init__(
@@ -139,6 +191,16 @@ class Image(BaseState):
         image: PIL.Image.Image | FileOrPath,
         name: str = _IMAGE_DEFAULT_NAME,
     ) -> None:
+        """Initialie the image state with the given PIL Image, image file-like, or path
+        to an image file-like.
+
+        Arguments:
+            image -- A PIL Image, file-like containing image data, or a path to
+                     an image.
+
+        Keyword Arguments:
+            name -- A friendly name of the image. (default: {_IMAGE_DEFAULT_NAME})
+        """
         # image.load() reads in full, and closes any fds *that PIL itself opened*
         # https://pillow.readthedocs.io/en/stable/reference/open_files.html#image-lifecycle
         if isinstance(image, PIL.Image.Image):
@@ -182,6 +244,18 @@ class Image(BaseState):
         dimensions: Dimensions,
         name: str = _IMAGE_DEFAULT_NAME,
     ) -> T_IMAGE:
+        """Intiialize a new image directly from RGBA pixeldata.
+
+        Arguments:
+            data -- RGBA pixeldata
+            dimensions -- The dimension of the image.
+
+        Keyword Arguments:
+            name -- A friendly name of the image. (default: {_IMAGE_DEFAULT_NAME})
+
+        Returns:
+            An initialized Image state object.
+        """
         pil_image = _image.rgba_bytes_to_PIL_image(data, dimensions.as_tuple())
         return cls(pil_image, name)
 
@@ -194,10 +268,14 @@ _SPRITE_DEFAULT_NAME: Final[str] = "(untitled)"
 
 
 class Sprite(BaseState):
+    """A sprite is one or more images and a key indicating which image should be
+    rendered when the sprite appears on-screen."""
+
     __slots__ = ("active_key", "images", "name")
 
     @property
     def active(self) -> Image:
+        """The currently active image as indicated by active_key."""
         try:
             return self.images[self.active_key]
         except KeyError as ex:
@@ -227,6 +305,17 @@ class Sprite(BaseState):
         active_key: str = "",
         name: str = _SPRITE_DEFAULT_NAME,
     ) -> None:
+        """Initialize with one or more images.
+
+        Arguments:
+            images -- One or more images in a dict-like. If a single image is provided.
+                      a dict-like is initialied and the given image is keyed on
+                      emptystring.
+
+        Keyword Arguments:
+            active_key -- The key of the image to render. (default: {""})
+            name -- A friendly name of the sprite. (default: {_SPRITE_DEFAULT_NAME})
+        """
         self.images: dict[str, Image]
 
         self.name = name
@@ -274,9 +363,13 @@ class Sprite(BaseState):
 
 
 class PositionedSprite(Sprite):
+    """A sprite (set of images) with coordinates indicating where on a two-dimensional
+    plane it should be rendered."""
+
     __slots__ = ("coordinates",)
 
     coordinates: Coordinates
+    """Where on the two-dimensional canvas the sprite's active image should appear."""
 
     def __init__(
         self,
@@ -285,6 +378,19 @@ class PositionedSprite(Sprite):
         active_key: str = "",
         name: str = _SPRITE_DEFAULT_NAME,
     ) -> None:
+        """Initialie with one or more images and a given set of coordinates.
+
+        Arguments:
+            images -- One or more images in a dict-like. If a single image is provided.
+                      a dict-like is initialied and the given image is keyed on
+                      emptystring.
+            coordinates -- Where on the two-dimensional canvas the sprite's active
+                           image should appear.
+
+        Keyword Arguments:
+            active_key -- The key of the image to render. (default: {""})
+            name -- A friendly name of the sprite. (default: {_SPRITE_DEFAULT_NAME})
+        """
         if coordinates is None:
             coordinates = Coordinates(0, 0)
         self.coordinates = coordinates
@@ -316,11 +422,18 @@ class PositionedSprite(Sprite):
 
 @dataclasses.dataclass(slots=True)
 class Canvas(BaseState):
+    """A bounded two-dimensional plane with a background and zero or more positioned
+    sprites to be rendered on it."""
+
     background_color: RGBPixel = (0, 0, 0)
+    """A color to paint the image before drawing any sprites."""
     dimensions: Dimensions = dataclasses.field(
         default_factory=lambda: Dimensions(800, 600)
     )
+    """The width and height of the image."""
+
     sprites: list[PositionedSprite] = dataclasses.field(default_factory=list)
+    """One or more positioned sprites to be rendered."""
 
     def validate(self) -> ValidationErrors:
         errors: ValidationErrors = {}
@@ -344,7 +457,10 @@ class Canvas(BaseState):
 
 @dataclasses.dataclass(slots=True)
 class State(BaseState):
+    """Tkursed appliation rendering state state."""
+
     canvas: Canvas = dataclasses.field(default_factory=Canvas)
+    """The visible canvas of the Tkursed Tkinter Widget."""
     frame_rate: int = 0
     tick_rate_ms: int = 1000 // 60
 
