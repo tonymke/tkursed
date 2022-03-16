@@ -1,3 +1,5 @@
+"""Package implementing a 2D renderer implemented as a Tkinter widget."""
+
 from tkursed._consts import BITS_PER_PIXEL, BPP, EVENT_SEQUENCE_TICK  # noqa: F401
 from tkursed._render import Renderer  # noqa: F401
 from tkursed._state import (  # noqa: F401
