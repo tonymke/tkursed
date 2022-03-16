@@ -7,6 +7,8 @@ from tkursed import _consts, _image, _state
 
 
 class Renderer:
+    """Renders a given state to a tkinter-compatible image."""
+
     __slots__ = (
         "__bg_cache",
         "__dimensions",
@@ -45,6 +47,20 @@ class Renderer:
                 self.__tk_image.paste(self.__image)
 
     def render(self, state: _state.State, **kwargs) -> PIL.ImageTk.PhotoImage | None:
+        """Render the given state to the frame buffer.
+
+        If the frame buffer has been re-sized since the prior render, a reference to
+        a new tkinter-compatible PhotoImage will be returned. The caller should
+        immediately update any containing widgets with the new image; the old image
+        can be safely garbage collected.
+
+        Arguments:
+            state -- State object describing a renderable canvas and sprites.
+
+        Returns:
+            A new tkinter-compatible image if the image has been resized since the
+            previous render.
+        """
         # for unit tests - avoid touching tk objects that require a window
         is_headless: bool = bool(kwargs.get("__is_headless", False))
 
