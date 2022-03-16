@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "tkursed"
-version = "0.1.0"
+version = "0.1.1.dev"
 description = "A completely cursed 2D renderer done entirely with the Tcl/Tk image object."
 authors = ["Tony Lechner <tony@tony-lechner.com>"]
 license = "MIT"
