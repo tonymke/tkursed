@@ -12,6 +12,8 @@ AfterKey = str
 
 
 class Tkursed(tkinter.ttk.Frame):
+    """A tkinter widget of a dynamic software-rendered image."""
+
     __slots__ = (
         "__framerate_monitor",
         "__image_label",
@@ -25,6 +27,8 @@ class Tkursed(tkinter.ttk.Frame):
 
     @property
     def running(self) -> bool:
+        """Whether the rendering loop is running and future Tick events
+        will be generated."""
         return self.__run
 
     def __init__(
@@ -35,6 +39,18 @@ class Tkursed(tkinter.ttk.Frame):
         tick_rate_ms: int = 1000 // 60,
         **kwargs,
     ):
+        """Initialize a new Tkursed widget.
+
+        Keyword Arguments:
+            width -- How wide the image should be. (default: {800})
+            height -- How tall the image should be (default: {600})
+            tick_rate_ms -- How often the image should check for updates to render,
+                            in milliseconds. A Tkinter event is raised each tick of this
+                            loop. (default: {1000//60})
+
+        Raises:
+            ValueError: nonpositive width, height, or tick_rate_ms
+        """
         for arg_key in ("width", "height", "tick_rate_ms"):
             arg_val: int = cast(int, locals().get(arg_key))
 
@@ -117,11 +133,13 @@ class Tkursed(tkinter.ttk.Frame):
         self.tkursed_state.frame_rate = next(self.__framerate_iter)
 
     def start(self) -> None:
+        """Idempotently start the rendering loop."""
         self.__run = True
         if not self.__loop_interval_key:
             self.__loop_interval_key = self.after_idle(self.__logic_loop, self.tick)
 
     def stop(self) -> None:
+        """Idempotently stop the rendering loop."""
         self.__run = False
         if key := self.__loop_interval_key:
             self.__loop_interval_key = None
@@ -129,6 +147,10 @@ class Tkursed(tkinter.ttk.Frame):
 
 
 class SimpleTkursedWindow(tkinter.Tk, metaclass=abc.ABCMeta):
+    """A simple abstract Tkinter window for the most basic use cases.
+
+    Note that only onetinter.Tk can ever exist per thread."""
+
     def __init__(
         self,
         title: str = "A tcl/tkursed 2D renderer",
@@ -155,6 +177,8 @@ class SimpleTkursedWindow(tkinter.Tk, metaclass=abc.ABCMeta):
         self.bind(_consts.EVENT_SEQUENCE_TICK, self.handle_tick)
 
     def report_callback_exception(self, exc, val, tb):
+        """tkinter callback invoked when an unhandled exception is risen by
+        a callback in its event loop."""
         printed = False
         self.tkursed.stop()
         try:
@@ -175,4 +199,10 @@ class SimpleTkursedWindow(tkinter.Tk, metaclass=abc.ABCMeta):
 
     @abc.abstractmethod
     def handle_tick(self, event: tkinter.Event) -> None:
+        """Your application's rendering tick handler.
+
+        Update the image to be drawn by mutating self.tkursed.tkursed_state,
+        and indicating updates were made by setting self.tkursed.is_dirty=True before
+        returning.
+        """
         raise NotImplementedError
